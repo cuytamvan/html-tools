@@ -1,0 +1,280 @@
+{
+  "commands": [
+    {
+      "id": "docker-compose-up",
+      "label": "Docker Compose up",
+      "description": "Jalankan semua service di background, lalu lihat log.",
+      "language": "bash",
+      "code": [
+        "docker compose up -d",
+        "docker compose ps",
+        "docker compose logs -f"
+      ]
+    },
+    {
+      "id": "docker-compose-down",
+      "label": "Docker Compose down",
+      "description": "Hentikan service dan hapus volume lokal jika diperlukan.",
+      "language": "bash",
+      "code": [
+        "docker compose down",
+        "docker compose down -v"
+      ]
+    },
+    {
+      "id": "git-first-commit",
+      "label": "Git first commit",
+      "description": "Inisialisasi repo dan commit pertama.",
+      "language": "bash",
+      "code": [
+        "git init",
+        "git add .",
+        "git commit -m \"Initial commit\"",
+        "git branch -M main"
+      ]
+    },
+    {
+      "id": "wait-for-postgres",
+      "label": "Tunggu Postgres siap",
+      "description": "Loop sampai Postgres di container menerima koneksi.",
+      "language": "bash",
+      "code": [
+        "until docker compose exec -T postgres pg_isready -U app; do",
+        "  sleep 1",
+        "done"
+      ]
+    },
+    {
+      "id": "find-port",
+      "label": "Cari proses di port",
+      "description": "Lihat proses yang memakai port tertentu.",
+      "language": "bash",
+      "code": [
+        "lsof -i :8080",
+        "lsof -i :8080 -t"
+      ]
+    },
+    {
+      "id": "curl-json",
+      "label": "Curl JSON",
+      "description": "Request JSON dengan header Content-Type.",
+      "language": "bash",
+      "code": [
+        "curl -sS http://localhost:8080/health",
+        "curl -sS -X POST http://localhost:8080/api \\",
+        "  -H \"Content-Type: application/json\" \\",
+        "  -d '{\"name\":\"contoh\"}'"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "id": "compose-postgres-redis",
+      "label": "Docker Compose Postgres + Redis",
+      "description": "File compose dengan Postgres 16 dan Redis 7, plus volume dan healthcheck.",
+      "filename": "docker-compose.yml",
+      "language": "yaml",
+      "code": [
+        "services:",
+        "  postgres:",
+        "    image: postgres:16-alpine",
+        "    environment:",
+        "      POSTGRES_USER: app",
+        "      POSTGRES_PASSWORD: secret",
+        "      POSTGRES_DB: app",
+        "    ports:",
+        "      - \"5432:5432\"",
+        "    volumes:",
+        "      - postgres_data:/var/lib/postgresql/data",
+        "    healthcheck:",
+        "      test: [\"CMD-SHELL\", \"pg_isready -U app\"]",
+        "      interval: 5s",
+        "      timeout: 5s",
+        "      retries: 5",
+        "",
+        "  redis:",
+        "    image: redis:7-alpine",
+        "    ports:",
+        "      - \"6379:6379\"",
+        "    volumes:",
+        "      - redis_data:/data",
+        "    command: [\"redis-server\", \"--appendonly\", \"yes\"]",
+        "",
+        "volumes:",
+        "  postgres_data:",
+        "  redis_data:"
+      ]
+    },
+    {
+      "id": "compose-postgres-redis-nginx",
+      "label": "Docker Compose Postgres + Redis + Nginx",
+      "description": "Compose lengkap dengan Nginx sebagai reverse proxy ke app.",
+      "filename": "docker-compose.yml",
+      "language": "yaml",
+      "code": [
+        "services:",
+        "  app:",
+        "    build: .",
+        "    expose:",
+        "      - \"3000\"",
+        "    environment:",
+        "      DATABASE_URL: postgres://app:secret@postgres:5432/app",
+        "      REDIS_URL: redis://redis:6379",
+        "    depends_on:",
+        "      postgres:",
+        "        condition: service_healthy",
+        "      redis:",
+        "        condition: service_started",
+        "",
+        "  nginx:",
+        "    image: nginx:alpine",
+        "    ports:",
+        "      - \"8080:80\"",
+        "    volumes:",
+        "      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro",
+        "    depends_on:",
+        "      - app",
+        "",
+        "  postgres:",
+        "    image: postgres:16-alpine",
+        "    environment:",
+        "      POSTGRES_USER: app",
+        "      POSTGRES_PASSWORD: secret",
+        "      POSTGRES_DB: app",
+        "    volumes:",
+        "      - postgres_data:/var/lib/postgresql/data",
+        "    healthcheck:",
+        "      test: [\"CMD-SHELL\", \"pg_isready -U app\"]",
+        "      interval: 5s",
+        "      timeout: 5s",
+        "      retries: 5",
+        "",
+        "  redis:",
+        "    image: redis:7-alpine",
+        "    volumes:",
+        "      - redis_data:/data",
+        "",
+        "volumes:",
+        "  postgres_data:",
+        "  redis_data:"
+      ]
+    },
+    {
+      "id": "dockerfile-nginx-static",
+      "label": "Dockerfile Nginx static",
+      "description": "Image Nginx untuk folder HTML statis.",
+      "filename": "Dockerfile",
+      "language": "dockerfile",
+      "code": [
+        "FROM nginx:alpine",
+        "COPY html /usr/share/nginx/html",
+        "EXPOSE 80"
+      ]
+    },
+    {
+      "id": "dockerfile-node",
+      "label": "Dockerfile Node",
+      "description": "Build production image Node.js dengan npm ci.",
+      "filename": "Dockerfile",
+      "language": "dockerfile",
+      "code": [
+        "FROM node:22-alpine AS deps",
+        "WORKDIR /app",
+        "COPY package.json package-lock.json ./",
+        "RUN npm ci --omit=dev",
+        "",
+        "FROM node:22-alpine",
+        "WORKDIR /app",
+        "ENV NODE_ENV=production",
+        "COPY --from=deps /app/node_modules ./node_modules",
+        "COPY . .",
+        "EXPOSE 3000",
+        "CMD [\"node\", \"index.js\"]"
+      ]
+    },
+    {
+      "id": "nginx-static",
+      "label": "Nginx static + proxy",
+      "description": "Konfigurasi Nginx untuk file statis dan reverse proxy /api.",
+      "filename": "nginx.conf",
+      "language": "nginx",
+      "code": [
+        "server {",
+        "  listen 80;",
+        "  server_name localhost;",
+        "  root /usr/share/nginx/html;",
+        "  index index.html;",
+        "",
+        "  location / {",
+        "    try_files $uri $uri/ /index.html;",
+        "  }",
+        "",
+        "  location /api/ {",
+        "    proxy_pass http://app:3000/;",
+        "    proxy_set_header Host $host;",
+        "    proxy_set_header X-Real-IP $remote_addr;",
+        "  }",
+        "}"
+      ]
+    },
+    {
+      "id": "env-example",
+      "label": ".env.example",
+      "description": "Contoh environment variable untuk Postgres dan Redis.",
+      "filename": ".env.example",
+      "language": "bash",
+      "code": [
+        "NODE_ENV=development",
+        "PORT=3000",
+        "POSTGRES_USER=app",
+        "POSTGRES_PASSWORD=secret",
+        "POSTGRES_DB=app",
+        "DATABASE_URL=postgres://app:secret@localhost:5432/app",
+        "REDIS_URL=redis://localhost:6379"
+      ]
+    },
+    {
+      "id": "gitignore-node",
+      "label": ".gitignore Node",
+      "description": "Ignore umum untuk project Node.js.",
+      "filename": ".gitignore",
+      "language": "gitignore",
+      "code": [
+        "node_modules/",
+        "dist/",
+        "coverage/",
+        ".env",
+        ".env.local",
+        ".DS_Store",
+        "npm-debug.log*"
+      ]
+    },
+    {
+      "id": "github-actions-node",
+      "label": "GitHub Actions Node",
+      "description": "Workflow CI untuk install, lint, dan test.",
+      "filename": ".github/workflows/ci.yml",
+      "language": "yaml",
+      "code": [
+        "name: CI",
+        "",
+        "on:",
+        "  push:",
+        "    branches: [main]",
+        "  pull_request:",
+        "",
+        "jobs:",
+        "  test:",
+        "    runs-on: ubuntu-latest",
+        "    steps:",
+        "      - uses: actions/checkout@v4",
+        "      - uses: actions/setup-node@v4",
+        "        with:",
+        "          node-version: 22",
+        "          cache: npm",
+        "      - run: npm ci",
+        "      - run: npm test"
+      ]
+    }
+  ]
+}

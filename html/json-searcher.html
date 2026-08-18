@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON Searcher</title>
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="css/global.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
+    <h1>JSON Searcher</h1>
+    <p>Paste JSON (Object, Array of Object, atau beberapa Object dipisah koma), cari, filter, dan lihat hasilnya dalam tabel.</p>
+  </header>
+
+  <section class="panel">
+    <p class="panel-title">Input JSON</p>
+    <textarea id="jsonInput" placeholder='Paste JSON di sini, contoh: [{"nama":"Budi"}] atau {"nama":"Budi"} atau {"nama":"Budi"}, {"nama":"Siti"}'></textarea>
+    <div class="row between">
+      <div class="row">
+        <button class="btn-primary" id="btnLoad">Proses JSON</button>
+        <button class="btn-ghost" id="btnSample">Muat Contoh</button>
+      </div>
+      <div class="row">
+        <span class="meta" id="dataMeta"><b>0</b> baris data tersimpan</span>
+        <button class="btn-danger btn-sm" id="btnClear">Hapus Semua Data</button>
+      </div>
+    </div>
+    <div class="error-box" id="errorBox"></div>
+  </section>
+
+  <section class="panel">
+    <p class="panel-title">Pencarian &amp; Filter</p>
+    <div class="row" style="margin-bottom:10px;">
+      <input type="text" class="search-input" id="searchInput" placeholder="Ketik untuk mencari...">
+      <span class="count-badge" id="matchBadge">0 / 0 baris cocok</span>
+    </div>
+    <div class="row">
+      <span class="meta" style="margin-right:2px;">Cari dalam field:</span>
+      <div id="filterChain"></div>
+    </div>
+  </section>
+
+  <div class="table-scroll">
+    <table id="dataTable" style="display:none;">
+      <thead><tr id="tableHeadRow"></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState">Belum ada data. Paste JSON di atas untuk mulai.</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3>Data sudah ada</h3>
+    <p>Kamu sudah punya data yang tersimpan. Array JSON baru ini mau di-<b>replace</b> (ganti semua) atau di-<b>merge</b> (gabung dengan data lama)?</p>
+    <div class="modal-actions">
+      <button class="btn-ghost btn-sm" id="modalCancel">Batal</button>
+      <button class="btn-danger btn-sm" id="modalReplace">Replace</button>
+      <button class="btn-primary btn-sm" id="modalMerge">Merge</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="clearModalOverlay">
+  <div class="modal-box">
+    <h3>Hapus semua data?</h3>
+    <p>Semua baris data yang tersimpan akan dihapus dan tidak bisa dikembalikan.</p>
+    <div class="modal-actions">
+      <button class="btn-ghost btn-sm" id="clearModalCancel">Batal</button>
+      <button class="btn-danger btn-sm" id="clearModalConfirm">Hapus Semua</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="jsonModalOverlay">
+  <div class="modal-box modal-json">
+    <h3>Detail JSON</h3>
+    <p id="jsonModalMeta">Baris #1</p>
+    <pre class="modal-json-pre" id="jsonModalContent"></pre>
+    <div class="modal-actions">
+      <button class="btn-ghost btn-sm" id="jsonModalCopy">Salin</button>
+      <button class="btn-primary btn-sm" id="jsonModalClose">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- state ----------
+  let dataset = [];        // array of objects
+  let pendingArray = null; // array waiting for replace/merge decision
+  let filterPath = [];     // path (array of keys) used to scope search
+
+  // ---------- dom refs ----------
+  const jsonInput   = document.getElementById('jsonInput');
+  const btnLoad     = document.getElementById('btnLoad');
+  const btnSample   = document.getElementById('btnSample');
+  const btnClear    = document.getElementById('btnClear');
+  const dataMeta    = document.getElementById('dataMeta');
+  const errorBox    = document.getElementById('errorBox');
+  const searchInput = document.getElementById('searchInput');
+  const matchBadge  = document.getElementById('matchBadge');
+  const filterChain = document.getElementById('filterChain');
+  const table       = document.getElementById('dataTable');
+  const tableHeadRow= document.getElementById('tableHeadRow');
+  const tableBody   = document.getElementById('tableBody');
+  const emptyState  = document.getElementById('emptyState');
+  const modalOverlay= document.getElementById('modalOverlay');
+  const modalCancel = document.getElementById('modalCancel');
+  const modalReplace= document.getElementById('modalReplace');
+  const modalMerge  = document.getElementById('modalMerge');
+  const toastEl     = document.getElementById('toast');
+  const clearModalOverlay = document.getElementById('clearModalOverlay');
+  const clearModalCancel  = document.getElementById('clearModalCancel');
+  const clearModalConfirm = document.getElementById('clearModalConfirm');
+  const jsonModalOverlay  = document.getElementById('jsonModalOverlay');
+  const jsonModalMeta     = document.getElementById('jsonModalMeta');
+  const jsonModalContent  = document.getElementById('jsonModalContent');
+  const jsonModalCopy     = document.getElementById('jsonModalCopy');
+  const jsonModalClose    = document.getElementById('jsonModalClose');
+  let jsonModalRaw = '';
+
+  // ---------- helpers: json path navigation ----------
+
+  function isPlainObject(v){
+    return v !== null && typeof v === 'object' && !Array.isArray(v);
+  }
+
+  // Navigate obj following `path` (array of keys). Arrays encountered along
+  // the way are fanned out: every element continues the navigation.
+  // Returns a flat array of resulting values.
+  function collectValues(obj, path){
+    if (path.length === 0) return [obj];
+    if (obj === undefined || obj === null) return [];
+    const key = path[0];
+    const rest = path.slice(1);
+    if (Array.isArray(obj)){
+      // shouldn't normally hit this at top level, but handle gracefully
+      let out = [];
+      for (const item of obj) out = out.concat(collectValues(item, path));
+      return out;
+    }
+    if (typeof obj !== 'object') return [];
+    const val = obj[key];
+    if (val === undefined) return [];
+    if (Array.isArray(val)){
+      let out = [];
+      for (const item of val) out = out.concat(collectValues(item, rest));
+      return out;
+    }
+    return collectValues(val, rest);
+  }
+
+  // union of keys found across dataset at a given path
+  function unionKeys(ds, path){
+    const keys = [];
+    const seen = new Set();
+    for (const item of ds){
+      const vals = collectValues(item, path);
+      for (const v of vals){
+        if (isPlainObject(v)){
+          for (const k of Object.keys(v)){
+            if (!seen.has(k)){ seen.add(k); keys.push(k); }
+          }
+        }
+      }
+    }
+    return keys;
+  }
+
+  // does `key` at `path` lead to nested object(s) that should be drillable?
+  function keyKind(ds, path, key){
+    const fullPath = path.concat([key]);
+    let hasObject = false;
+    for (const item of ds){
+      const vals = collectValues(item, fullPath);
+      for (const v of vals){
+        if (isPlainObject(v)){ hasObject = true; break; }
+      }
+      if (hasObject) break;
+    }
+    return hasObject ? 'nested' : 'leaf';
+  }
+
+  // ---------- toast / error ----------
+  let toastTimer = null;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> toastEl.classList.remove('show'), 2200);
+  }
+  function showError(msg){
+    errorBox.textContent = msg;
+    errorBox.style.display = 'block';
+  }
+  function clearError(){
+    errorBox.style.display = 'none';
+    errorBox.textContent = '';
+  }
+
+  // ---------- localStorage cache ----------
+  const STORAGE_KEY = 'json-searcher:dataset';
+
+  function saveCache(){
+    try{
+      if (dataset.length === 0){
+        localStorage.removeItem(STORAGE_KEY);
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));
+    }catch(e){
+      if (e && (e.name === 'QuotaExceededError' || e.code === 22)){
+        showToast('Data terlalu besar untuk disimpan di browser.');
+      }
+    }
+  }
+
+  function loadCache(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.some(x => !isPlainObject(x))){
+        localStorage.removeItem(STORAGE_KEY);
+        return false;
+      }
+      dataset = parsed;
+      return parsed.length > 0;
+    }catch(_){
+      return false;
+    }
+  }
+  function parseJsonInput(raw){
+    try{
+      return JSON.parse(raw);
+    }catch(firstErr){
+      const candidates = [raw, raw.replace(/,\s*$/, '')];
+      for (const candidate of candidates){
+        try{
+          return JSON.parse('[' + candidate + ']');
+        }catch(_){ /* try next */ }
+      }
+      throw firstErr;
+    }
+  }
+
+  function handleLoad(){
+    clearError();
+    const raw = jsonInput.value.trim();
+    if (!raw){
+      showError('Masukkan JSON terlebih dahulu.');
+      return;
+    }
+    let parsed;
+    try{
+      parsed = parseJsonInput(raw);
+    }catch(e){
+      showError('JSON tidak valid: ' + e.message);
+      return;
+    }
+
+    if (Array.isArray(parsed)){
+      if (parsed.length === 0){
+        showError('Array kosong, tidak ada data untuk dimuat.');
+        return;
+      }
+      const allObjects = parsed.every(x => isPlainObject(x));
+      if (!allObjects){
+        showError('Array harus berisi Object di setiap elemennya.');
+        return;
+      }
+      if (dataset.length === 0){
+        dataset = parsed;
+        afterDataChange();
+        jsonInput.value = '';
+        showToast('Data dimuat (' + parsed.length + ' baris).');
+      } else {
+        pendingArray = parsed;
+        modalOverlay.classList.add('show');
+      }
+    } else if (isPlainObject(parsed)){
+      dataset.push(parsed);
+      afterDataChange();
+      jsonInput.value = '';
+      showToast('Object ditambahkan ke data.');
+    } else {
+      showError('JSON harus berupa Object, Array of Object, atau beberapa Object dipisah koma.');
+    }
+  }
+
+  modalCancel.addEventListener('click', ()=>{
+    pendingArray = null;
+    modalOverlay.classList.remove('show');
+  });
+  modalReplace.addEventListener('click', ()=>{
+    dataset = pendingArray;
+    pendingArray = null;
+    modalOverlay.classList.remove('show');
+    jsonInput.value = '';
+    afterDataChange();
+    showToast('Data lama diganti dengan data baru.');
+  });
+  modalMerge.addEventListener('click', ()=>{
+    dataset = dataset.concat(pendingArray);
+    pendingArray = null;
+    modalOverlay.classList.remove('show');
+    jsonInput.value = '';
+    afterDataChange();
+    showToast('Data baru digabung dengan data lama.');
+  });
+
+  btnClear.addEventListener('click', ()=>{
+    if (dataset.length === 0){
+      showToast('Tidak ada data untuk dihapus.');
+      return;
+    }
+    clearModalOverlay.classList.add('show');
+  });
+
+  clearModalCancel.addEventListener('click', ()=>{
+    clearModalOverlay.classList.remove('show');
+  });
+
+  clearModalConfirm.addEventListener('click', ()=>{
+    dataset = [];
+    clearModalOverlay.classList.remove('show');
+    afterDataChange();
+    showToast('Semua data dihapus.');
+  });
+
+  btnSample.addEventListener('click', ()=>{
+    const sample = [
+      { id: 1, nama: "Budi Santoso", umur: 28, kota: "Jakarta",
+        alamat: { jalan: "Jl. Merdeka No. 1", provinsi: "DKI Jakarta" },
+        hobi: ["membaca", "sepak bola"] },
+      { id: 2, nama: "Siti Aminah", umur: 34, kota: "Bandung",
+        alamat: { jalan: "Jl. Asia Afrika No. 10", provinsi: "Jawa Barat" },
+        hobi: ["memasak"] },
+      { id: 3, nama: "Andi Wijaya", umur: 41, kota: "Surabaya",
+        alamat: { jalan: "Jl. Pemuda No. 5", provinsi: "Jawa Timur" },
+        hobi: ["fotografi", "traveling"] }
+    ];
+    jsonInput.value = JSON.stringify(sample, null, 2);
+  });
+
+  btnLoad.addEventListener('click', handleLoad);
+
+  // ---------- filter chain ----------
+  function rebuildFilterChain(){
+    filterChain.innerHTML = '';
+    filterPath = [];
+    if (dataset.length === 0) return;
+    buildFilterLevel(0, []);
+  }
+
+  function buildFilterLevel(level, basePath){
+    const keys = unionKeys(dataset, basePath);
+    if (keys.length === 0) return;
+
+    if (level > 0){
+      const arrow = document.createElement('span');
+      arrow.className = 'filter-arrow';
+      arrow.textContent = '\u203A'; // ›
+      arrow.dataset.level = level;
+      filterChain.appendChild(arrow);
+    }
+
+    const select = document.createElement('select');
+    select.className = 'filter-select';
+    select.dataset.level = level;
+
+    const stopOpt = document.createElement('option');
+    stopOpt.value = '__STOP__';
+    stopOpt.textContent = level === 0 ? 'Semua Field' : '— cari semua di sini —';
+    select.appendChild(stopOpt);
+
+    for (const k of keys){
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = k;
+      select.appendChild(opt);
+    }
+
+    select.addEventListener('change', ()=>{
+      removeLevelsAfter(level);
+      if (select.value === '__STOP__'){
+        filterPath = basePath;
+      } else {
+        const chosenKey = select.value;
+        const newPath = basePath.concat([chosenKey]);
+        filterPath = newPath;
+        if (keyKind(dataset, basePath, chosenKey) === 'nested'){
+          buildFilterLevel(level + 1, newPath);
+        }
+      }
+      renderTable();
+    });
+
+    filterChain.appendChild(select);
+  }
+
+  function removeLevelsAfter(level){
+    const nodes = Array.from(filterChain.children);
+    for (const node of nodes){
+      const nl = parseInt(node.dataset.level, 10);
+      if (!isNaN(nl) && nl > level){
+        filterChain.removeChild(node);
+      }
+    }
+  }
+
+  // ---------- rendering ----------
+  function escapeHtml(str){
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function escapeRegExp(str){
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function highlight(escapedText, query){
+    if (!query) return escapedText;
+    const re = new RegExp(escapeRegExp(escapeHtml(query)), 'gi');
+    return escapedText.replace(re, m => '<mark>' + m + '</mark>');
+  }
+
+  function valueToText(v){
+    if (v === undefined) return '';
+    if (v === null) return 'null';
+    if (typeof v === 'object') return JSON.stringify(v);
+    return String(v);
+  }
+
+  function rowMatches(item, query){
+    if (!query) return true;
+    const values = collectValues(item, filterPath);
+    const haystack = (filterPath.length === 0 && values.length === 1
+        ? JSON.stringify(values[0])
+        : values.map(v => typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)).join(' ')
+      ).toLowerCase();
+    return haystack.includes(query.toLowerCase());
+  }
+
+  function renderTable(){
+    const query = searchInput.value.trim();
+    const columns = unionKeys(dataset, []);
+
+    if (dataset.length === 0){
+      table.style.display = 'none';
+      emptyState.style.display = 'block';
+      emptyState.textContent = 'Belum ada data. Paste JSON di atas untuk mulai.';
+      matchBadge.textContent = '0 / 0 baris cocok';
+      return;
+    }
+
+    // header
+    tableHeadRow.innerHTML = '<th>#</th>' + columns.map(c => '<th>' + escapeHtml(c) + '</th>').join('');
+
+    let matched = 0;
+    const rowsHtml = [];
+    dataset.forEach((item, idx) => {
+      if (!rowMatches(item, query)) return;
+      matched++;
+      let rowHtml = '<tr data-idx="' + idx + '" title="Klik untuk lihat JSON lengkap"><td class="idx-col">' + (idx + 1) + '</td>';
+      for (const col of columns){
+        const raw = item[col];
+        const isObj = raw !== null && typeof raw === 'object';
+        const text = valueToText(raw);
+        const escaped = escapeHtml(text);
+        const shown = query ? highlight(escaped, query) : escaped;
+        rowHtml += isObj
+          ? '<td class="cell-json">' + shown + '</td>'
+          : '<td class="cell-value" title="' + escaped + '">' + shown + '</td>';
+      }
+      rowHtml += '</tr>';
+      rowsHtml.push(rowHtml);
+    });
+
+    if (rowsHtml.length === 0){
+      table.style.display = 'none';
+      emptyState.style.display = 'block';
+      emptyState.textContent = 'Tidak ada baris yang cocok dengan pencarian.';
+    } else {
+      table.style.display = 'table';
+      emptyState.style.display = 'none';
+      tableBody.innerHTML = rowsHtml.join('');
+    }
+
+    matchBadge.textContent = matched + ' / ' + dataset.length + ' baris cocok';
+  }
+
+  function openJsonModal(item, idx){
+    jsonModalRaw = JSON.stringify(item, null, 2);
+    jsonModalMeta.textContent = 'Baris #' + (idx + 1);
+    jsonModalContent.textContent = jsonModalRaw;
+    jsonModalOverlay.classList.add('show');
+  }
+
+  function closeJsonModal(){
+    jsonModalOverlay.classList.remove('show');
+  }
+
+  tableBody.addEventListener('click', (e)=>{
+    const tr = e.target.closest('tr');
+    if (!tr || !tableBody.contains(tr)) return;
+    const idx = parseInt(tr.dataset.idx, 10);
+    if (isNaN(idx) || !dataset[idx]) return;
+    openJsonModal(dataset[idx], idx);
+  });
+
+  jsonModalClose.addEventListener('click', closeJsonModal);
+  jsonModalOverlay.addEventListener('click', (e)=>{
+    if (e.target === jsonModalOverlay) closeJsonModal();
+  });
+  jsonModalCopy.addEventListener('click', ()=>{
+    if (!jsonModalRaw) return;
+    navigator.clipboard.writeText(jsonModalRaw).then(()=>{
+      showToast('JSON disalin ke clipboard.');
+    }).catch(()=>{
+      showToast('Gagal menyalin JSON.');
+    });
+  });
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape' && jsonModalOverlay.classList.contains('show')){
+      closeJsonModal();
+    }
+  });
+
+  function afterDataChange(){
+    dataMeta.innerHTML = '<b>' + dataset.length + '</b> baris data tersimpan';
+    saveCache();
+    rebuildFilterChain();
+    renderTable();
+  }
+
+  searchInput.addEventListener('input', renderTable);
+
+  // ---------- init ----------
+  const restored = loadCache();
+  afterDataChange();
+  if (restored){
+    showToast('Data sebelumnya dipulihkan (' + dataset.length + ' baris).');
+  }
+
+})();
+</script>
+</body>
+</html>
