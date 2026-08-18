@@ -1,2 +1,6 @@
 html/data/boilerplates.json
 .DS_Store
+
+
+.agents
+skills-lock.json
