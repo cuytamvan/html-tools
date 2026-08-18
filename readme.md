@@ -2,9 +2,35 @@
 
 Kumpulan tool HTML statis. Style bersama ada di `html/css/global.css`. JavaScript tetap di masing-masing file HTML.
 
+## Setup Boilerplate
+
+Halaman Boilerplate membaca `html/data/boilerplates.json`. File ini tidak ikut di-commit; salin dari contoh:
+
+```bash
+cp html/data/boilerplates.example.json html/data/boilerplates.json
+```
+
+Edit `html/data/boilerplates.json` untuk menambah atau mengubah perintah dan file. Struktur datanya:
+
+```json
+{
+  "commands": [],
+  "files": []
+}
+```
+
 ## Run dengan Docker (nginx)
 
 Dari root repository ini:
+
+```bash
+docker run -d --name html-tools \
+  -p 8080:80 \
+  -v "$(pwd)/html:/usr/share/nginx/html:ro" \
+  --restart unless-stopped nginx:alpine
+```
+
+atau sekali jalan:
 
 ```bash
 docker run --rm --name html-tools \
