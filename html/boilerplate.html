@@ -1,223 +1,232 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Boilerplate</title>
-<link rel="icon" href="favicon.ico" type="image/x-icon">
-<link rel="stylesheet" href="css/global.css">
-</head>
-<body>
-<div class="ambient" aria-hidden="true"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Boilerplate</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="css/global.css" />
+  </head>
+  <body>
+    <div class="ambient" aria-hidden="true"></div>
 
-<div class="wrap">
-  <header class="reveal">
-    <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
-    <h1>Boilerplate</h1>
-    <p>Pilih perintah atau file yang mau di-generate, lalu salin kodenya.</p>
-  </header>
+    <div class="wrap">
+      <header class="reveal">
+        <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
+        <h1>Boilerplate</h1>
+        <p>Pilih perintah atau file yang mau di-generate, lalu salin kodenya.</p>
+      </header>
 
-  <section class="panel reveal">
-    <p class="panel-title">File</p>
-    <div class="card">
-    <div class="choice-group" id="fileButtons"></div>
+      <section class="panel reveal">
+        <p class="panel-title">File</p>
+        <div class="card">
+          <div class="choice-group" id="fileButtons"></div>
+        </div>
+      </section>
+
+      <section class="panel reveal">
+        <p class="panel-title">Perintah</p>
+        <div class="card">
+          <div class="choice-group" id="commandButtons"></div>
+        </div>
+      </section>
+
+      <section class="panel reveal" id="previewPanel" style="display: none">
+        <div class="code-panel-head">
+          <div>
+            <h2 id="itemTitle"></h2>
+            <p class="meta" id="itemDescription"></p>
+          </div>
+        </div>
+        <div class="code-wrap">
+          <div class="code-toolbar">
+            <span class="filename" id="itemFilename"></span>
+            <button class="btn-ghost btn-sm" id="btnCopy" type="button">Salin</button>
+          </div>
+          <pre class="code-block" id="codeBlock"></pre>
+        </div>
+      </section>
+
+      <div class="empty-state" id="emptyState">Pilih salah satu tombol di atas untuk melihat kodenya.</div>
     </div>
-  </section>
 
-  <section class="panel reveal">
-    <p class="panel-title">Perintah</p>
-    <div class="card">
-    <div class="choice-group" id="commandButtons"></div>
-    </div>
-  </section>
+    <div class="toast" id="toast"></div>
 
-  <section class="panel reveal" id="previewPanel" style="display:none;">
-    <div class="code-panel-head">
-      <div>
-        <h2 id="itemTitle"></h2>
-        <p class="meta" id="itemDescription"></p>
-      </div>
-    </div>
-    <div class="code-wrap">
-      <div class="code-toolbar">
-        <span class="filename" id="itemFilename"></span>
-        <button class="btn-ghost btn-sm" id="btnCopy" type="button">Salin</button>
-      </div>
-      <pre class="code-block" id="codeBlock"></pre>
-    </div>
-  </section>
+    <script src="js/ui.js"></script>
+    <script>
+      (function () {
+        'use strict';
 
-  <div class="empty-state" id="emptyState">Pilih salah satu tombol di atas untuk melihat kodenya.</div>
-</div>
+        const fileButtons = document.getElementById('fileButtons');
+        const commandButtons = document.getElementById('commandButtons');
+        const previewPanel = document.getElementById('previewPanel');
+        const emptyState = document.getElementById('emptyState');
+        const itemTitle = document.getElementById('itemTitle');
+        const itemDescription = document.getElementById('itemDescription');
+        const itemFilename = document.getElementById('itemFilename');
+        const codeBlock = document.getElementById('codeBlock');
+        const btnCopy = document.getElementById('btnCopy');
+        const toastEl = document.getElementById('toast');
 
-<div class="toast" id="toast"></div>
+        let currentCode = '';
+        let toastTimer = null;
 
-<script src="js/ui.js"></script>
-<script>
-(function(){
-  "use strict";
-
-  const fileButtons = document.getElementById('fileButtons');
-  const commandButtons = document.getElementById('commandButtons');
-  const previewPanel = document.getElementById('previewPanel');
-  const emptyState = document.getElementById('emptyState');
-  const itemTitle = document.getElementById('itemTitle');
-  const itemDescription = document.getElementById('itemDescription');
-  const itemFilename = document.getElementById('itemFilename');
-  const codeBlock = document.getElementById('codeBlock');
-  const btnCopy = document.getElementById('btnCopy');
-  const toastEl = document.getElementById('toast');
-
-  let currentCode = '';
-  let toastTimer = null;
-
-  function showToast(msg){
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=> toastEl.classList.remove('show'), 2200);
-  }
-
-  function escapeHtml(str){
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  function getCode(item){
-    if (Array.isArray(item.code)) return item.code.join('\n');
-    return String(item.code || '');
-  }
-
-  function tokenize(code, rules){
-    let rest = code;
-    let html = '';
-    while (rest.length){
-      let hit = null;
-      for (let i = 0; i < rules.length; i++){
-        const m = rest.match(rules[i].re);
-        if (m){
-          hit = { type: rules[i].type, text: m[0] };
-          break;
+        function showToast(msg) {
+          toastEl.textContent = msg;
+          toastEl.classList.add('show');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
         }
-      }
-      if (!hit){
-        html += escapeHtml(rest.charAt(0));
-        rest = rest.slice(1);
-      } else {
-        html += '<span class="tok-' + hit.type + '">' + escapeHtml(hit.text) + '</span>';
-        rest = rest.slice(hit.text.length);
-      }
-    }
-    return html;
-  }
 
-  const YAML_RULES = [
-    { re: /^[ \t]*#.*(?:\n|$)/, type: 'comment' },
-    { re: /^'(?:\\'|[^'])*'/, type: 'string' },
-    { re: /^"(?:\\.|[^"\\])*"/, type: 'string' },
-    { re: /^(?:true|false|null|yes|no)\b/, type: 'keyword' },
-    { re: /^-?\d+(?:\.\d+)?\b/, type: 'number' },
-    { re: /^[\w./-]+(?=\s*:)/, type: 'key' }
-  ];
+        function escapeHtml(str) {
+          return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
 
-  const BASH_RULES = [
-    { re: /^[ \t]*#.*(?:\n|$)/, type: 'comment' },
-    { re: /^'(?:\\'|[^'])*'/, type: 'string' },
-    { re: /^"(?:\\.|[^"\\])*"/, type: 'string' },
-    { re: /^\$\{?[A-Za-z_][\w]*\}?/, type: 'var' },
-    { re: /^(?:if|then|else|elif|fi|for|do|done|in|while|case|esac|function|return|exit|until)\b/, type: 'keyword' },
-    { re: /^--?[\w-]+/, type: 'flag' }
-  ];
+        function getCode(item) {
+          if (Array.isArray(item.code)) return item.code.join('\n');
+          return String(item.code || '');
+        }
 
-  const DOCKERFILE_RULES = [
-    { re: /^[ \t]*#.*(?:\n|$)/, type: 'comment' },
-    { re: /^(?:FROM|RUN|CMD|COPY|ADD|WORKDIR|ENV|EXPOSE|USER|VOLUME|ENTRYPOINT|LABEL|ARG|HEALTHCHECK|AS)\b/, type: 'keyword' },
-    { re: /^'(?:\\'|[^'])*'/, type: 'string' },
-    { re: /^"(?:\\.|[^"\\])*"/, type: 'string' },
-    { re: /^--?[\w-]+/, type: 'flag' }
-  ];
+        function tokenize(code, rules) {
+          let rest = code;
+          let html = '';
+          while (rest.length) {
+            let hit = null;
+            for (let i = 0; i < rules.length; i++) {
+              const m = rest.match(rules[i].re);
+              if (m) {
+                hit = { type: rules[i].type, text: m[0] };
+                break;
+              }
+            }
+            if (!hit) {
+              html += escapeHtml(rest.charAt(0));
+              rest = rest.slice(1);
+            } else {
+              html += '<span class="tok-' + hit.type + '">' + escapeHtml(hit.text) + '</span>';
+              rest = rest.slice(hit.text.length);
+            }
+          }
+          return html;
+        }
 
-  const NGINX_RULES = [
-    { re: /^[ \t]*#.*(?:\n|$)/, type: 'comment' },
-    { re: /^(?:server|location|listen|root|index|try_files|proxy_pass|proxy_set_header|server_name)\b/, type: 'keyword' },
-    { re: /^'(?:\\'|[^'])*'/, type: 'string' },
-    { re: /^"(?:\\.|[^"\\])*"/, type: 'string' },
-    { re: /^\$[\w_]+/, type: 'var' },
-    { re: /^\d+\b/, type: 'number' }
-  ];
+        const YAML_RULES = [
+          { re: /^[ \t]*#.*(?:\n|$)/, type: 'comment' },
+          { re: /^'(?:\\'|[^'])*'/, type: 'string' },
+          { re: /^"(?:\\.|[^"\\])*"/, type: 'string' },
+          { re: /^(?:true|false|null|yes|no)\b/, type: 'keyword' },
+          { re: /^-?\d+(?:\.\d+)?\b/, type: 'number' },
+          { re: /^[\w./-]+(?=\s*:)/, type: 'key' },
+        ];
 
-  function highlight(code, language){
-    const lang = String(language || '').toLowerCase();
-    if (lang === 'yaml' || lang === 'yml') return tokenize(code, YAML_RULES);
-    if (lang === 'bash' || lang === 'sh' || lang === 'shell' || lang === 'gitignore') return tokenize(code, BASH_RULES);
-    if (lang === 'dockerfile' || lang === 'docker') return tokenize(code, DOCKERFILE_RULES);
-    if (lang === 'nginx') return tokenize(code, NGINX_RULES);
-    return escapeHtml(code);
-  }
+        const BASH_RULES = [
+          { re: /^[ \t]*#.*(?:\n|$)/, type: 'comment' },
+          { re: /^'(?:\\'|[^'])*'/, type: 'string' },
+          { re: /^"(?:\\.|[^"\\])*"/, type: 'string' },
+          { re: /^\$\{?[A-Za-z_][\w]*\}?/, type: 'var' },
+          {
+            re: /^(?:if|then|else|elif|fi|for|do|done|in|while|case|esac|function|return|exit|until)\b/,
+            type: 'keyword',
+          },
+          { re: /^--?[\w-]+/, type: 'flag' },
+        ];
 
-  function clearActive(){
-    document.querySelectorAll('.choice-group button.is-active').forEach(btn => {
-      btn.classList.remove('is-active');
-    });
-  }
+        const DOCKERFILE_RULES = [
+          { re: /^[ \t]*#.*(?:\n|$)/, type: 'comment' },
+          {
+            re: /^(?:FROM|RUN|CMD|COPY|ADD|WORKDIR|ENV|EXPOSE|USER|VOLUME|ENTRYPOINT|LABEL|ARG|HEALTHCHECK|AS)\b/,
+            type: 'keyword',
+          },
+          { re: /^'(?:\\'|[^'])*'/, type: 'string' },
+          { re: /^"(?:\\.|[^"\\])*"/, type: 'string' },
+          { re: /^--?[\w-]+/, type: 'flag' },
+        ];
 
-  function showItem(item, kind, button){
-    clearActive();
-    if (button) button.classList.add('is-active');
+        const NGINX_RULES = [
+          { re: /^[ \t]*#.*(?:\n|$)/, type: 'comment' },
+          {
+            re: /^(?:server|location|listen|root|index|try_files|proxy_pass|proxy_set_header|server_name)\b/,
+            type: 'keyword',
+          },
+          { re: /^'(?:\\'|[^'])*'/, type: 'string' },
+          { re: /^"(?:\\.|[^"\\])*"/, type: 'string' },
+          { re: /^\$[\w_]+/, type: 'var' },
+          { re: /^\d+\b/, type: 'number' },
+        ];
 
-    currentCode = getCode(item);
-    itemTitle.textContent = item.label || item.id;
-    itemDescription.textContent = item.description || '';
-    itemFilename.textContent = item.filename || (kind === 'commands' ? 'command.sh' : '');
-    codeBlock.innerHTML = highlight(currentCode, item.language);
-    previewPanel.style.display = 'block';
-    emptyState.style.display = 'none';
-  }
+        function highlight(code, language) {
+          const lang = String(language || '').toLowerCase();
+          if (lang === 'yaml' || lang === 'yml') return tokenize(code, YAML_RULES);
+          if (lang === 'bash' || lang === 'sh' || lang === 'shell' || lang === 'gitignore')
+            return tokenize(code, BASH_RULES);
+          if (lang === 'dockerfile' || lang === 'docker') return tokenize(code, DOCKERFILE_RULES);
+          if (lang === 'nginx') return tokenize(code, NGINX_RULES);
+          return escapeHtml(code);
+        }
 
-  function renderButtons(items, kind, container){
-    container.innerHTML = '';
-    items.forEach(item => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn-ghost btn-sm';
-      btn.textContent = item.label || item.id;
-      btn.addEventListener('click', ()=> showItem(item, kind, btn));
-      container.appendChild(btn);
-    });
-  }
+        function clearActive() {
+          document.querySelectorAll('.choice-group button.is-active').forEach((btn) => {
+            btn.classList.remove('is-active');
+          });
+        }
 
-  btnCopy.addEventListener('click', ()=>{
-    if (!currentCode) return;
-    navigator.clipboard.writeText(currentCode).then(()=>{
-      showToast('Kode disalin ke clipboard.');
-    }).catch(()=>{
-      showToast('Gagal menyalin kode.');
-    });
-  });
+        function showItem(item, kind, button) {
+          clearActive();
+          if (button) button.classList.add('is-active');
 
-  fetch('data/boilerplates.json')
-    .then(res => {
-      if (!res.ok) throw new Error('Gagal memuat data boilerplate.');
-      return res.json();
-    })
-    .then(data => {
-      const files = Array.isArray(data.files) ? data.files : [];
-      const commands = Array.isArray(data.commands) ? data.commands : [];
-      renderButtons(files, 'files', fileButtons);
-      renderButtons(commands, 'commands', commandButtons);
-      if (files.length){
-        const first = fileButtons.querySelector('button');
-        showItem(files[0], 'files', first);
-      }
-    })
-    .catch(err => {
-      emptyState.style.display = 'block';
-      emptyState.textContent = err.message || 'Gagal memuat data boilerplate.';
-    });
-})();
-</script>
-</body>
+          currentCode = getCode(item);
+          itemTitle.textContent = item.label || item.id;
+          itemDescription.textContent = item.description || '';
+          itemFilename.textContent = item.filename || (kind === 'commands' ? 'command.sh' : '');
+          codeBlock.innerHTML = highlight(currentCode, item.language);
+          previewPanel.style.display = 'block';
+          emptyState.style.display = 'none';
+        }
+
+        function renderButtons(items, kind, container) {
+          container.innerHTML = '';
+          items.forEach((item) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-ghost btn-sm';
+            btn.textContent = item.label || item.id;
+            btn.addEventListener('click', () => showItem(item, kind, btn));
+            container.appendChild(btn);
+          });
+        }
+
+        btnCopy.addEventListener('click', () => {
+          if (!currentCode) return;
+          navigator.clipboard
+            .writeText(currentCode)
+            .then(() => {
+              showToast('Kode disalin ke clipboard.');
+            })
+            .catch(() => {
+              showToast('Gagal menyalin kode.');
+            });
+        });
+
+        fetch('data/boilerplates.json')
+          .then((res) => {
+            if (!res.ok) throw new Error('Gagal memuat data boilerplate.');
+            return res.json();
+          })
+          .then((data) => {
+            const files = Array.isArray(data.files) ? data.files : [];
+            const commands = Array.isArray(data.commands) ? data.commands : [];
+            renderButtons(files, 'files', fileButtons);
+            renderButtons(commands, 'commands', commandButtons);
+            if (files.length) {
+              const first = fileButtons.querySelector('button');
+              showItem(files[0], 'files', first);
+            }
+          })
+          .catch((err) => {
+            emptyState.style.display = 'block';
+            emptyState.textContent = err.message || 'Gagal memuat data boilerplate.';
+          });
+      })();
+    </script>
+  </body>
 </html>

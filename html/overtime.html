@@ -1,128 +1,129 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Perhitungan Lembur</title>
-<link rel="icon" href="favicon.ico" type="image/x-icon">
-<link rel="stylesheet" href="css/global.css">
-</head>
-<body>
-<div class="ambient" aria-hidden="true"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perhitungan Lembur</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="css/global.css" />
+  </head>
+  <body>
+    <div class="ambient" aria-hidden="true"></div>
 
-<div class="wrap">
-  <header class="reveal">
-    <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
-    <h1>Perhitungan Lembur</h1>
-    <p>Hitung upah lembur berdasarkan gaji, hari kerja, jam kerja per hari, dan jam lembur.</p>
-  </header>
+    <div class="wrap">
+      <header class="reveal">
+        <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
+        <h1>Perhitungan Lembur</h1>
+        <p>Hitung upah lembur berdasarkan gaji, hari kerja, jam kerja per hari, dan jam lembur.</p>
+      </header>
 
-  <section class="panel reveal">
-    <p class="panel-title">Input</p>
-    <div class="card">
-    <div class="form-grid">
-      <div class="field">
-        <label for="salary">Gaji</label>
-        <input type="number" id="salary" min="0" step="1000" placeholder="5000000">
-        <p class="hint">Gaji pokok per bulan (Rp)</p>
-      </div>
-      <div class="field">
-        <label for="workDays">Hari kerja</label>
-        <input type="number" id="workDays" min="1" step="1" value="25">
-        <p class="hint">Jumlah hari kerja dalam sebulan</p>
-      </div>
-      <div class="field">
-        <label for="workHours">Total jam kerja</label>
-        <input type="number" id="workHours" min="0.5" step="0.5" value="9">
-        <p class="hint">Jam kerja per hari</p>
-      </div>
-      <div class="field">
-        <label for="overtimeHours">Jam lembur</label>
-        <input type="number" id="overtimeHours" min="0" step="0.5" placeholder="0">
-        <p class="hint">Total jam lembur yang dihitung</p>
-      </div>
-      </div>
+      <section class="panel reveal">
+        <p class="panel-title">Input</p>
+        <div class="card">
+          <div class="form-grid">
+            <div class="field">
+              <label for="salary">Gaji</label>
+              <input type="number" id="salary" min="0" step="1000" placeholder="5000000" />
+              <p class="hint">Gaji pokok per bulan (Rp)</p>
+            </div>
+            <div class="field">
+              <label for="workDays">Hari kerja</label>
+              <input type="number" id="workDays" min="1" step="1" value="25" />
+              <p class="hint">Jumlah hari kerja dalam sebulan</p>
+            </div>
+            <div class="field">
+              <label for="workHours">Total jam kerja</label>
+              <input type="number" id="workHours" min="0.5" step="0.5" value="9" />
+              <p class="hint">Jam kerja per hari</p>
+            </div>
+            <div class="field">
+              <label for="overtimeHours">Jam lembur</label>
+              <input type="number" id="overtimeHours" min="0" step="0.5" placeholder="0" />
+              <p class="hint">Total jam lembur yang dihitung</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel reveal">
+        <p class="panel-title">Hasil</p>
+        <div class="card">
+          <div class="result-list">
+            <div class="result-row">
+              <span class="label">Upah per jam</span>
+              <span class="value" id="hourlyWage">—</span>
+            </div>
+            <div class="result-row">
+              <span class="label">Total upah lembur</span>
+              <span class="value" id="overtimePay">—</span>
+            </div>
+            <div class="result-row total">
+              <span class="label">Gaji + lembur</span>
+              <span class="value" id="grandTotal">—</span>
+            </div>
+          </div>
+          <p class="result-note" id="resultNote">
+            Upah per jam = Gaji ÷ (Hari kerja × Total jam kerja). Upah lembur = Jam lembur × Upah per jam.
+          </p>
+        </div>
+      </section>
     </div>
-  </section>
 
-  <section class="panel reveal">
-    <p class="panel-title">Hasil</p>
-    <div class="card">
-    <div class="result-list">
-      <div class="result-row">
-        <span class="label">Upah per jam</span>
-        <span class="value" id="hourlyWage">—</span>
-      </div>
-      <div class="result-row">
-        <span class="label">Total upah lembur</span>
-        <span class="value" id="overtimePay">—</span>
-      </div>
-      <div class="result-row total">
-        <span class="label">Gaji + lembur</span>
-        <span class="value" id="grandTotal">—</span>
-      </div>
-    </div>
-    <p class="result-note" id="resultNote">
-      Upah per jam = Gaji ÷ (Hari kerja × Total jam kerja). Upah lembur = Jam lembur × Upah per jam.
-    </p>
-    </div>
-  </section>
-</div>
+    <script src="js/ui.js"></script>
+    <script>
+      (function () {
+        'use strict';
 
-<script src="js/ui.js"></script>
-<script>
-(function(){
-  "use strict";
+        const salaryEl = document.getElementById('salary');
+        const workDaysEl = document.getElementById('workDays');
+        const workHoursEl = document.getElementById('workHours');
+        const overtimeHoursEl = document.getElementById('overtimeHours');
 
-  const salaryEl = document.getElementById('salary');
-  const workDaysEl = document.getElementById('workDays');
-  const workHoursEl = document.getElementById('workHours');
-  const overtimeHoursEl = document.getElementById('overtimeHours');
+        const hourlyWageEl = document.getElementById('hourlyWage');
+        const overtimePayEl = document.getElementById('overtimePay');
+        const grandTotalEl = document.getElementById('grandTotal');
+        const resultNoteEl = document.getElementById('resultNote');
 
-  const hourlyWageEl = document.getElementById('hourlyWage');
-  const overtimePayEl = document.getElementById('overtimePay');
-  const grandTotalEl = document.getElementById('grandTotal');
-  const resultNoteEl = document.getElementById('resultNote');
+        function formatRp(n) {
+          if (!isFinite(n)) return '—';
+          return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+        }
 
-  function formatRp(n){
-    if (!isFinite(n)) return '—';
-    return 'Rp ' + Math.round(n).toLocaleString('id-ID');
-  }
+        function num(el) {
+          const v = parseFloat(el.value);
+          return isFinite(v) ? v : NaN;
+        }
 
-  function num(el){
-    const v = parseFloat(el.value);
-    return isFinite(v) ? v : NaN;
-  }
+        function calculate() {
+          const salary = num(salaryEl);
+          const workDays = num(workDaysEl);
+          const workHours = num(workHoursEl);
+          const overtimeHours = num(overtimeHoursEl);
 
-  function calculate(){
-    const salary = num(salaryEl);
-    const workDays = num(workDaysEl);
-    const workHours = num(workHoursEl);
-    const overtimeHours = num(overtimeHoursEl);
+          if (!(salary > 0) || !(workDays > 0) || !(workHours > 0) || !(overtimeHours >= 0)) {
+            hourlyWageEl.textContent = '—';
+            overtimePayEl.textContent = '—';
+            grandTotalEl.textContent = '—';
+            resultNoteEl.textContent = 'Isi gaji, hari kerja, total jam kerja, dan jam lembur untuk melihat hasil.';
+            return;
+          }
 
-    if (!(salary > 0) || !(workDays > 0) || !(workHours > 0) || !(overtimeHours >= 0)){
-      hourlyWageEl.textContent = '—';
-      overtimePayEl.textContent = '—';
-      grandTotalEl.textContent = '—';
-      resultNoteEl.textContent = 'Isi gaji, hari kerja, total jam kerja, dan jam lembur untuk melihat hasil.';
-      return;
-    }
+          const hourlyWage = salary / (workDays * workHours);
+          const overtimePay = overtimeHours * hourlyWage;
 
-    const hourlyWage = salary / (workDays * workHours);
-    const overtimePay = overtimeHours * hourlyWage;
+          hourlyWageEl.textContent = formatRp(hourlyWage);
+          overtimePayEl.textContent = formatRp(overtimePay);
+          grandTotalEl.textContent = formatRp(salary + overtimePay);
+          resultNoteEl.textContent =
+            'Upah per jam = Gaji ÷ (Hari kerja × Total jam kerja). Upah lembur = Jam lembur × Upah per jam.';
+        }
 
-    hourlyWageEl.textContent = formatRp(hourlyWage);
-    overtimePayEl.textContent = formatRp(overtimePay);
-    grandTotalEl.textContent = formatRp(salary + overtimePay);
-    resultNoteEl.textContent = 'Upah per jam = Gaji ÷ (Hari kerja × Total jam kerja). Upah lembur = Jam lembur × Upah per jam.';
-  }
+        [salaryEl, workDaysEl, workHoursEl, overtimeHoursEl].forEach((el) => {
+          el.addEventListener('input', calculate);
+        });
 
-  [salaryEl, workDaysEl, workHoursEl, overtimeHoursEl].forEach(el => {
-    el.addEventListener('input', calculate);
-  });
-
-  calculate();
-})();
-</script>
-</body>
+        calculate();
+      })();
+    </script>
+  </body>
 </html>
