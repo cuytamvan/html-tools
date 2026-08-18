@@ -8,16 +8,18 @@
 <link rel="stylesheet" href="css/global.css">
 </head>
 <body>
+<div class="ambient" aria-hidden="true"></div>
 
 <div class="wrap">
-  <header>
+  <header class="reveal">
     <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
     <h1>Perhitungan Lembur</h1>
     <p>Hitung upah lembur berdasarkan gaji, hari kerja, jam kerja per hari, dan jam lembur.</p>
   </header>
 
-  <section class="panel">
+  <section class="panel reveal">
     <p class="panel-title">Input</p>
+    <div class="card">
     <div class="form-grid">
       <div class="field">
         <label for="salary">Gaji</label>
@@ -39,11 +41,13 @@
         <input type="number" id="overtimeHours" min="0" step="0.5" placeholder="0">
         <p class="hint">Total jam lembur yang dihitung</p>
       </div>
+      </div>
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel reveal">
     <p class="panel-title">Hasil</p>
+    <div class="card">
     <div class="result-list">
       <div class="result-row">
         <span class="label">Upah per jam</span>
@@ -61,9 +65,11 @@
     <p class="result-note" id="resultNote">
       Upah per jam = Gaji ÷ (Hari kerja × Total jam kerja). Upah lembur = Jam lembur × Upah per jam.
     </p>
+    </div>
   </section>
 </div>
 
+<script src="js/ui.js"></script>
 <script>
 (function(){
   "use strict";

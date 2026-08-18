@@ -8,16 +8,17 @@
 <link rel="stylesheet" href="css/global.css">
 </head>
 <body>
+<div class="ambient" aria-hidden="true"></div>
 
 <div class="wrap">
-  <header>
+  <header class="reveal">
     <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
     <h1>Hashids</h1>
     <p>Encode angka menjadi hash, atau decode hash menjadi angka. Salt, panjang minimum, dan alphabet harus sama di kedua sisi.</p>
   </header>
 
   <div class="split-grid">
-    <section class="panel split-span-2">
+    <section class="panel split-span-2 reveal">
       <details class="collapse">
         <summary>Pengaturan</summary>
         <div class="form-grid cols-2">
@@ -40,7 +41,7 @@
       </details>
     </section>
 
-    <section class="panel">
+    <section class="panel card reveal">
       <p class="panel-title">Encode</p>
       <div class="form-grid">
         <div class="field field-full">
@@ -61,7 +62,7 @@
       <p class="result-note" id="encodeNote">Masukkan angka untuk encode.</p>
     </section>
 
-    <section class="panel">
+    <section class="panel card reveal">
       <p class="panel-title">Decode</p>
       <div class="form-grid">
         <div class="field field-full">
@@ -88,6 +89,7 @@
   </div>
 </div>
 
+<script src="js/ui.js"></script>
 <script>
 (function(){
   "use strict";

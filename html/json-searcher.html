@@ -8,16 +8,18 @@
 <link rel="stylesheet" href="css/global.css">
 </head>
 <body>
+<div class="ambient" aria-hidden="true"></div>
 
 <div class="wrap">
-  <header>
+  <header class="reveal">
     <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
     <h1>JSON Searcher</h1>
     <p>Paste JSON (Object, Array of Object, atau beberapa Object dipisah koma), cari, filter, dan lihat hasilnya dalam tabel.</p>
   </header>
 
-  <section class="panel">
+  <section class="panel reveal">
     <p class="panel-title">Input JSON</p>
+    <div class="card">
     <textarea id="jsonInput" placeholder='Paste JSON di sini, contoh: [{"nama":"Budi"}] atau {"nama":"Budi"} atau {"nama":"Budi"}, {"nama":"Siti"}'></textarea>
     <div class="row between">
       <div class="row">
@@ -30,10 +32,12 @@
       </div>
     </div>
     <div class="error-box" id="errorBox"></div>
+    </div>
   </section>
 
-  <section class="panel">
+  <section class="panel reveal">
     <p class="panel-title">Pencarian &amp; Filter</p>
+    <div class="card">
     <div class="row" style="margin-bottom:10px;">
       <input type="text" class="search-input" id="searchInput" placeholder="Ketik untuk mencari...">
       <span class="count-badge" id="matchBadge">0 / 0 baris cocok</span>
@@ -42,9 +46,10 @@
       <span class="meta" style="margin-right:2px;">Cari dalam field:</span>
       <div id="filterChain"></div>
     </div>
+    </div>
   </section>
 
-  <div class="table-scroll">
+  <div class="table-scroll reveal">
     <table id="dataTable" style="display:none;">
       <thead><tr id="tableHeadRow"></tr></thead>
       <tbody id="tableBody"></tbody>
@@ -90,6 +95,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="js/ui.js"></script>
 <script>
 (function(){
   "use strict";

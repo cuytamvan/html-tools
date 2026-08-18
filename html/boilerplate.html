@@ -8,25 +8,30 @@
 <link rel="stylesheet" href="css/global.css">
 </head>
 <body>
+<div class="ambient" aria-hidden="true"></div>
 
 <div class="wrap">
-  <header>
+  <header class="reveal">
     <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
     <h1>Boilerplate</h1>
     <p>Pilih perintah atau file yang mau di-generate, lalu salin kodenya.</p>
   </header>
 
-  <section class="panel">
+  <section class="panel reveal">
     <p class="panel-title">File</p>
+    <div class="card">
     <div class="choice-group" id="fileButtons"></div>
+    </div>
   </section>
 
-  <section class="panel">
+  <section class="panel reveal">
     <p class="panel-title">Perintah</p>
+    <div class="card">
     <div class="choice-group" id="commandButtons"></div>
+    </div>
   </section>
 
-  <section class="panel" id="previewPanel" style="display:none;">
+  <section class="panel reveal" id="previewPanel" style="display:none;">
     <div class="code-panel-head">
       <div>
         <h2 id="itemTitle"></h2>
@@ -47,6 +52,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="js/ui.js"></script>
 <script>
 (function(){
   "use strict";
