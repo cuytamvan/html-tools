@@ -20,7 +20,7 @@
       <header class="reveal">
         <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
         <h1>Boilerplate</h1>
-        <p>Unduh contoh JSON, atau pilih file <span class="mono">boilerplates.json</span> dari komputer. Di Chrome/Edge, edit file itu akan ikut ter-load.</p>
+        <p>Unduh contoh JSON, lalu pilih folder tempat file itu disimpan. Perubahan pada <span class="mono">boilerplates.json</span> ikut ter-load.</p>
       </header>
 
       <section class="panel reveal">
@@ -28,15 +28,14 @@
         <div class="card" id="sourceCard">
           <p class="meta" id="sourceMeta">Belum ada file yang dipilih.</p>
           <div class="row" style="margin-top: 14px">
-            <button class="btn-primary" id="btnChoose" type="button">Pilih file</button>
+            <button class="btn-primary" id="btnChoose" type="button">Pilih folder</button>
             <a class="btn-ghost" id="btnDownload" href="data/boilerplates.example.json" download="boilerplates.json">Unduh contoh</a>
             <button class="btn-ghost" id="btnClearSource" type="button" hidden>Hapus sumber</button>
           </div>
-          <input type="file" id="fileSource" class="file-native" accept=".json,application/json" />
+          <input type="file" id="fileSource" class="file-native" accept=".json" />
           <p class="result-note">
-            Unduh contoh, edit di komputer, lalu pilih file itu. Format:
+            Unduh contoh, simpan sebagai <span class="mono">boilerplates.json</span>, lalu pilih foldernya. Format:
             <span class="mono">{ "commands": [], "files": [] }</span>
-            Perubahan file diikuti otomatis selama tab ini tetap terbuka.
           </p>
         </div>
       </section>
@@ -73,7 +72,7 @@
       </section>
       </div>
 
-      <div class="empty-state" id="emptyState">Unduh contoh JSON, atau pilih file boilerplates.json dari komputer.</div>
+      <div class="empty-state" id="emptyState">Unduh contoh JSON, lalu pilih folder tempat boilerplates.json disimpan.</div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -104,16 +103,18 @@
         const IDB_NAME = 'html-tools';
         const IDB_STORE = 'file-handles';
         const IDB_KEY = 'boilerplate';
-        const WATCH_MS = 1200;
+        const WATCH_MS = 800;
 
         let currentCode = '';
         let toastTimer = null;
         let selectedKind = '';
         let selectedKey = '';
-        let fileHandle = null;
+        let dirHandle = null;
+        let watchedName = '';
         let watchTimer = null;
-        let lastModified = 0;
+        let fsObserver = null;
         let lastText = '';
+        let ingestBusy = false;
 
         function showToast(msg) {
           toastEl.textContent = msg;
@@ -297,8 +298,14 @@
         function stopWatch() {
           clearInterval(watchTimer);
           watchTimer = null;
-          fileHandle = null;
-          lastModified = 0;
+          if (fsObserver) {
+            try {
+              fsObserver.disconnect();
+            } catch (_) {}
+            fsObserver = null;
+          }
+          dirHandle = null;
+          watchedName = '';
           lastText = '';
         }
 
@@ -322,8 +329,10 @@
           });
         }
 
-        function persistHandle(handle) {
-          return withHandleStore('readwrite', (store) => store.put(handle, IDB_KEY)).catch(() => {});
+        function persistSource(dir, fileName) {
+          return withHandleStore('readwrite', (store) =>
+            store.put({ version: 2, dir: dir, fileName: fileName }, IDB_KEY)
+          ).catch(() => {});
         }
 
         function readPersistedHandle() {
@@ -334,22 +343,45 @@
           return withHandleStore('readwrite', (store) => store.delete(IDB_KEY)).catch(() => {});
         }
 
-        function startWatch(handle) {
-          clearInterval(watchTimer);
-          fileHandle = handle;
-          watchTimer = setInterval(() => {
-            ingestHandle(fileHandle, { live: true });
-          }, WATCH_MS);
+        async function resolveJsonName(dir) {
+          const names = [];
+          for await (const [name, handle] of dir.entries()) {
+            if (handle.kind === 'file' && /\.json$/i.test(name)) names.push(name);
+          }
+          const preferred = names.find((name) => name.toLowerCase() === 'boilerplates.json');
+          if (preferred) return preferred;
+          if (names.length === 1) return names[0];
+          if (!names.length) throw new Error('Folder itu tidak berisi file JSON.');
+          throw new Error('Simpan file sebagai boilerplates.json, lalu pilih foldernya.');
         }
 
-        async function ingestHandle(handle, opts) {
-          if (!handle) return;
+        function startWatch(dir, fileName) {
+          clearInterval(watchTimer);
+          if (fsObserver) {
+            try {
+              fsObserver.disconnect();
+            } catch (_) {}
+            fsObserver = null;
+          }
+          dirHandle = dir;
+          watchedName = fileName;
+          watchTimer = setInterval(() => ingestFromDir({ live: true }), WATCH_MS);
+          if (typeof FileSystemObserver === 'function') {
+            try {
+              fsObserver = new FileSystemObserver(() => ingestFromDir({ live: true }));
+              Promise.resolve(fsObserver.observe(dir)).catch(() => {});
+            } catch (_) {}
+          }
+        }
+
+        async function ingestFromDir(opts) {
+          if (!dirHandle || !watchedName || ingestBusy) return;
           opts = opts || {};
+          ingestBusy = true;
           try {
+            const handle = await dirHandle.getFileHandle(watchedName);
             const file = await handle.getFile();
-            if (opts.live && file.lastModified === lastModified) return;
             const text = await file.text();
-            lastModified = file.lastModified;
             if (opts.live && text === lastText) return;
             loadFromText(text, file.name, { live: !!opts.live, watching: true });
             lastText = text;
@@ -359,19 +391,21 @@
             const invalid = err && String(err.message || '').indexOf('JSON tidak valid') === 0;
             if (opts.live && invalid) {
               sourceMeta.innerHTML =
-                'Memakai <b>' +
-                escapeHtml((fileHandle && fileHandle.name) || 'boilerplates.json') +
-                '</b> — JSON belum valid, menunggu simpan.';
+                'Memakai <b>' + escapeHtml(watchedName) + '</b> — JSON belum valid, menunggu simpan.';
               return;
             }
             if (!opts.live) showToast((err && err.message) || 'Gagal membaca file JSON.');
+          } finally {
+            ingestBusy = false;
           }
         }
 
-        async function useHandle(handle, toast) {
-          await persistHandle(handle);
-          await ingestHandle(handle, { toast: !!toast });
-          startWatch(handle);
+        async function useDirectory(dir, fileName, toast) {
+          await persistSource(dir, fileName);
+          dirHandle = dir;
+          watchedName = fileName;
+          await ingestFromDir({ toast: !!toast });
+          startWatch(dir, fileName);
         }
 
         function clearSource() {
@@ -385,7 +419,7 @@
           btnClearSource.hidden = true;
           sourceMeta.textContent = 'Belum ada file yang dipilih.';
           emptyState.style.display = 'block';
-          emptyState.textContent = 'Unduh contoh JSON, atau pilih file boilerplates.json dari komputer.';
+          emptyState.textContent = 'Unduh contoh JSON, lalu pilih folder tempat boilerplates.json disimpan.';
           fileSource.value = '';
           selectedKind = '';
           selectedKey = '';
@@ -438,18 +472,16 @@
         }
 
         async function openFilePicker() {
-          if (window.showOpenFilePicker) {
+          if (window.showDirectoryPicker) {
             try {
-              const handles = await window.showOpenFilePicker({
-                multiple: false,
-                types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
-              });
-              if (handles && handles[0]) {
-                await useHandle(handles[0], true);
-                return;
-              }
+              const dir = await window.showDirectoryPicker({ mode: 'read' });
+              const name = await resolveJsonName(dir);
+              await useDirectory(dir, name, true);
+              return;
             } catch (err) {
               if (err && err.name === 'AbortError') return;
+              showToast((err && err.message) || 'Gagal membuka folder.');
+              return;
             }
           }
           try {
@@ -482,14 +514,25 @@
           const item = event.dataTransfer && event.dataTransfer.items && event.dataTransfer.items[0];
           if (item && typeof item.getAsFileSystemHandle === 'function') {
             Promise.resolve(item.getAsFileSystemHandle())
-              .then((handle) => {
-                if (handle && handle.kind === 'file') return useHandle(handle, true);
+              .then(async (handle) => {
+                if (handle && handle.kind === 'directory') {
+                  const name = await resolveJsonName(handle);
+                  return useDirectory(handle, name, true);
+                }
                 readLocalFile(event.dataTransfer.files && event.dataTransfer.files[0]);
               })
-              .catch(() => readLocalFile(event.dataTransfer.files && event.dataTransfer.files[0]));
+              .catch((err) => {
+                if (err && err.name === 'AbortError') return;
+                if (err && err.message) showToast(err.message);
+                else readLocalFile(event.dataTransfer.files && event.dataTransfer.files[0]);
+              });
             return;
           }
           readLocalFile(event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]);
+        });
+
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') ingestFromDir({ live: true });
         });
 
         function restoreSavedData() {
@@ -500,17 +543,20 @@
         }
 
         readPersistedHandle()
-          .then(async (handle) => {
-            if (!handle || typeof handle.queryPermission !== 'function') {
+          .then(async (record) => {
+            const dir = record && record.version === 2 ? record.dir : record && record.kind === 'directory' ? record : null;
+            const fileName = record && record.fileName;
+            if (!dir || typeof dir.queryPermission !== 'function') {
               restoreSavedData();
               return;
             }
-            const perm = await handle.queryPermission({ mode: 'read' });
-            if (perm === 'granted') {
-              await useHandle(handle, false);
+            const perm = await dir.queryPermission({ mode: 'read' });
+            if (perm !== 'granted') {
+              restoreSavedData();
               return;
             }
-            restoreSavedData();
+            const name = fileName || (await resolveJsonName(dir));
+            await useDirectory(dir, name, false);
           })
           .catch(restoreSavedData);
       })();
