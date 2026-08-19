@@ -1,0 +1,52 @@
+{
+  "name": "HTML Tools",
+  "short_name": "HTML Tools",
+  "description": "Kumpulan tool HTML yang berjalan di browser.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F6F3",
+  "theme_color": "#F7F6F3",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "JSON Searcher",
+      "short_name": "JSON",
+      "url": "json-searcher.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Perhitungan Lembur",
+      "short_name": "Lembur",
+      "url": "overtime.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Hashids",
+      "short_name": "Hashids",
+      "url": "hashids-decoder.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Boilerplate",
+      "short_name": "Boilerplate",
+      "url": "boilerplate.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

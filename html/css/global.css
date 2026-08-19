@@ -38,6 +38,8 @@ body {
   line-height: 1.6;
   font-size: 15px;
   position: relative;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
 }
 
 .ambient {
