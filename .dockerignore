@@ -1,0 +1,8 @@
+.git
+.github
+.agents
+.DS_Store
+readme.md
+.prettierrc
+.gitignore
+html/data/boilerplates.json
