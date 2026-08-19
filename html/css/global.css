@@ -463,6 +463,7 @@ label.btn-primary:active {
 .btn-primary:hover {
   background: #333333;
   border-color: #333333;
+  color: #fff;
 }
 .btn-ghost {
 }

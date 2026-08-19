@@ -11,7 +11,7 @@
   var cta = document.querySelector('.hero-cta');
   var windowEl = document.querySelector('.os-window');
   var tools = document.querySelectorAll('.tool-item');
-  var notes = document.querySelectorAll('.note-card');
+  var notes = document.querySelectorAll('.note-card, .howto-card');
   var sectionHeads = document.querySelectorAll('.landing-section-head');
 
   if (reduce) return;
@@ -82,7 +82,7 @@
     duration: 0.7,
     ease: ease,
     scrollTrigger: {
-      trigger: '.note-grid',
+      trigger: '.howto-grid',
       start: 'top 82%',
       once: true,
     },

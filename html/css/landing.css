@@ -208,6 +208,97 @@ body.landing .ambient::before {
   font-size: 14px;
 }
 
+.howto-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 16px;
+}
+.howto-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 32px 32px 36px;
+  min-height: 240px;
+}
+.howto-card:first-child {
+  background: #f9f9f8;
+}
+.howto-card-wide {
+  grid-column: 1 / -1;
+}
+.howto-card h3 {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin: 0 0 10px;
+  text-transform: none;
+}
+.howto-card p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 42em;
+}
+.howto-card a {
+  color: var(--text);
+  text-underline-offset: 3px;
+}
+.howto-code {
+  margin: 18px 0 0;
+  padding: 16px 18px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text);
+  overflow-x: auto;
+  white-space: pre;
+}
+.howto-code .tok-cmd {
+  color: var(--pale-blue-text);
+}
+.howto-code .tok-sub {
+  color: var(--text);
+}
+.howto-code .tok-flag {
+  color: var(--pale-yellow-text);
+}
+.howto-code .tok-str {
+  color: var(--pale-green-text);
+}
+.howto-code .tok-num {
+  color: var(--danger);
+}
+.howto-list {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.howto-list li {
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.howto-list li:last-child {
+  padding-bottom: 0;
+}
+.howto-list b {
+  color: var(--text);
+  font-weight: 600;
+}
+.howto-list em {
+  font-style: italic;
+  font-family: var(--serif);
+  color: var(--text);
+}
+
 .landing-foot {
   border-top: 1px solid var(--line);
   padding: 28px 0 48px;
@@ -230,8 +321,14 @@ body.landing .ambient::before {
     padding: 56px 0 72px;
     gap: 36px;
   }
-  .note-grid {
+  .note-grid,
+  .howto-grid {
     grid-template-columns: 1fr;
+  }
+  .howto-card,
+  .howto-card-wide {
+    grid-column: auto;
+    min-height: 0;
   }
   .landing-section {
     padding: 64px 0;

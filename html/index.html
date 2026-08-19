@@ -45,7 +45,7 @@
           </p>
           <div class="hero-cta">
             <a class="btn-primary" href="#tools">Lihat tools</a>
-            <span class="hint">Host di nginx, port <kbd>8080</kbd></span>
+            <a class="btn-ghost" href="#cara-pakai">Cara install</a>
           </div>
         </div>
 
@@ -106,35 +106,50 @@
         </div>
       </section>
 
-      <section class="landing-section">
+      <section class="landing-section" id="cara-pakai">
         <div class="landing-section-head">
           <h2>Cara pakai</h2>
-          <p>Static files. Cukup folder <span class="mono">html</span> di belakang nginx.</p>
+          <p>Dari install sampai jalan. Pilih image Docker, clone repo, atau pasang sebagai aplikasi.</p>
         </div>
-        <div class="note-grid">
-          <article class="note-card">
-            <svg class="note-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-              <rect x="3" y="3" width="16" height="16" stroke="currentColor" stroke-width="1.7" />
-              <path d="M3 8.5h16M8.5 3v16" stroke="currentColor" stroke-width="1.7" />
-            </svg>
-            <h3>Berjalan di browser</h3>
-            <p>Logika ada di halaman itu sendiri. Data JSON Searcher disimpan di localStorage.</p>
+        <div class="howto-grid">
+          <article class="howto-card">
+            <h3>01 docker</h3>
+            <p>
+              Pull image lalu jalankan. Port <kbd>8080</kbd> di host mengarah ke nginx di dalam container. Buka
+              <span class="mono">http://localhost:8080</span>.
+            </p>
+            <pre class="howto-code"><span class="tok-cmd">docker</span> <span class="tok-sub">pull</span> <span class="tok-str">ghcr.io/cuytamvan/html-tools:latest</span>
+<span class="tok-cmd">docker</span> <span class="tok-sub">run</span> <span class="tok-flag">--rm</span> <span class="tok-flag">-p</span> <span class="tok-num">8080</span>:<span class="tok-num">80</span> <span class="tok-str">ghcr.io/cuytamvan/html-tools:latest</span></pre>
           </article>
-          <article class="note-card">
-            <svg class="note-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-              <path d="M4 16.5V5.5h9.5L18 10v6.5H4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-              <path d="M13.5 5.5V10H18" stroke="currentColor" stroke-width="1.7" />
-            </svg>
-            <h3>File biasa</h3>
-            <p>HTML, CSS, dan JSON. Tidak ada build step untuk memakai tool-nya.</p>
+          <article class="howto-card">
+            <h3>02 source</h3>
+            <p>
+              Ambil source dari
+              <a href="https://github.com/cuytamvan/html-tools">github.com/cuytamvan/html-tools</a>, build image
+              sendiri, lalu run.
+            </p>
+            <pre class="howto-code"><span class="tok-cmd">git</span> <span class="tok-sub">clone</span> <span class="tok-str">https://github.com/cuytamvan/html-tools.git</span>
+<span class="tok-cmd">cd</span> <span class="tok-str">html-tools</span>
+<span class="tok-cmd">docker</span> <span class="tok-sub">build</span> <span class="tok-flag">-t</span> <span class="tok-str">html-tools</span> <span class="tok-str">.</span>
+<span class="tok-cmd">docker</span> <span class="tok-sub">run</span> <span class="tok-flag">--rm</span> <span class="tok-flag">-p</span> <span class="tok-num">8080</span>:<span class="tok-num">80</span> <span class="tok-str">html-tools</span></pre>
           </article>
-          <article class="note-card">
-            <svg class="note-icon" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-              <circle cx="11" cy="11" r="7.5" stroke="currentColor" stroke-width="1.7" />
-              <path d="M11 7.5V11l2.5 2.5" stroke="currentColor" stroke-width="1.7" />
-            </svg>
-            <h3>Port 8080</h3>
-            <p>Mount folder html ke nginx. Buka <kbd>localhost:8080</kbd> lalu pilih tool.</p>
+          <article class="howto-card howto-card-wide">
+            <h3>03 pwa</h3>
+            <p>
+              Setelah halaman terbuka di browser (localhost atau HTTPS), HTML Tools bisa dipasang ke layar utama. Tidak
+              perlu Docker lagi untuk pemakaian sehari-hari.
+            </p>
+            <ol class="howto-list">
+              <li>
+                <b>Chrome / Edge.</b> Di address bar, pilih ikon install, atau menu lalu <em>Install HTML Tools</em>.
+              </li>
+              <li>
+                <b>Safari di iPhone.</b> Tombol Bagikan, lalu <em>Add to Home Screen</em>.
+              </li>
+              <li>
+                <b>Safari di Mac.</b> File, lalu <em>Add to Dock</em>.
+              </li>
+            </ol>
           </article>
         </div>
       </section>
