@@ -21,8 +21,8 @@
         <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
         <h1>JSON Searcher</h1>
         <p>
-          Paste JSON (Object, Array of Object, atau beberapa Object dipisah koma), cari, filter, dan lihat hasilnya
-          dalam tabel.
+          Paste JSON (Object, Array of Object, beberapa Object dipisah koma, atau satu Object per baris), cari, filter,
+          dan lihat hasilnya dalam tabel.
         </p>
       </header>
 
@@ -31,7 +31,7 @@
         <div class="card">
           <textarea
             id="jsonInput"
-            placeholder='Paste JSON di sini, contoh: [{"nama":"Budi"}] atau {"nama":"Budi"} atau {"nama":"Budi"}, {"nama":"Siti"}'
+            placeholder='Paste JSON di sini. Contoh: [{"nama":"Budi"}] atau {"nama":"Budi"} atau {"nama":"Budi"}{"nama":"Siti"}'
           ></textarea>
           <div class="row between">
             <div class="row">
@@ -270,6 +270,69 @@
             return false;
           }
         }
+        function scanJsonValue(str, start) {
+          let i = start;
+          const n = str.length;
+          while (i < n && /[\s,]/.test(str[i])) i++;
+          if (i >= n) return null;
+          const first = str[i];
+          if (first !== '{' && first !== '[') {
+            throw new SyntaxError('Expected { or [ at position ' + i);
+          }
+          let depth = 0;
+          let inString = false;
+          let escape = false;
+          for (let j = i; j < n; j++) {
+            const ch = str[j];
+            if (inString) {
+              if (escape) {
+                escape = false;
+                continue;
+              }
+              if (ch === '\\') {
+                escape = true;
+                continue;
+              }
+              if (ch === '"') inString = false;
+              continue;
+            }
+            if (ch === '"') {
+              inString = true;
+              continue;
+            }
+            if (ch === '{' || ch === '[') depth++;
+            else if (ch === '}' || ch === ']') {
+              depth--;
+              if (depth === 0) {
+                return { value: JSON.parse(str.slice(i, j + 1)), end: j + 1 };
+              }
+            }
+          }
+          throw new SyntaxError('JSON tidak lengkap.');
+        }
+
+        function parseConcatenated(raw) {
+          const values = [];
+          let i = 0;
+          while (i < raw.length) {
+            while (i < raw.length && /[\s,]/.test(raw[i])) i++;
+            if (i >= raw.length) break;
+            const scanned = scanJsonValue(raw, i);
+            if (!scanned) break;
+            values.push(scanned.value);
+            i = scanned.end;
+          }
+          if (!values.length) return null;
+          const objects = [];
+          for (let k = 0; k < values.length; k++) {
+            const item = values[k];
+            if (isPlainObject(item)) objects.push(item);
+            else if (Array.isArray(item) && item.every(isPlainObject)) objects.push.apply(objects, item);
+            else return null;
+          }
+          return objects;
+        }
+
         function parseJsonInput(raw) {
           try {
             return JSON.parse(raw);
@@ -281,6 +344,12 @@
               } catch (_) {
                 /* try next */
               }
+            }
+            try {
+              const many = parseConcatenated(raw);
+              if (many && many.length) return many;
+            } catch (_) {
+              /* fall through */
             }
             throw firstErr;
           }
@@ -326,7 +395,7 @@
             jsonInput.value = '';
             showToast('Object ditambahkan ke data.');
           } else {
-            showError('JSON harus berupa Object, Array of Object, atau beberapa Object dipisah koma.');
+            showError('JSON harus berupa Object, Array of Object, Object dipisah koma, atau satu Object per baris.');
           }
         }
 
@@ -552,11 +621,22 @@
           matchBadge.textContent = matched + ' / ' + dataset.length + ' baris cocok';
         }
 
+        function renderJsonModalContent() {
+          const query = searchInput.value.trim();
+          if (!query) {
+            jsonModalContent.textContent = jsonModalRaw;
+            return;
+          }
+          jsonModalContent.innerHTML = highlight(escapeHtml(jsonModalRaw), query);
+          const firstMark = jsonModalContent.querySelector('mark');
+          if (firstMark) firstMark.scrollIntoView({ block: 'nearest' });
+        }
+
         function openJsonModal(item, idx) {
           jsonModalRaw = JSON.stringify(item, null, 2);
           jsonModalMeta.textContent = 'Baris #' + (idx + 1);
-          jsonModalContent.textContent = jsonModalRaw;
           jsonModalOverlay.classList.add('show');
+          renderJsonModalContent();
         }
 
         function closeJsonModal() {
@@ -599,7 +679,10 @@
           renderTable();
         }
 
-        searchInput.addEventListener('input', renderTable);
+        searchInput.addEventListener('input', () => {
+          renderTable();
+          if (jsonModalOverlay.classList.contains('show')) renderJsonModalContent();
+        });
 
         // ---------- init ----------
         const restored = loadCache();
