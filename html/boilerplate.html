@@ -20,9 +20,28 @@
       <header class="reveal">
         <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
         <h1>Boilerplate</h1>
-        <p>Pilih perintah atau file yang mau di-generate, lalu salin kodenya.</p>
+        <p>Unduh contoh JSON, atau pilih file <span class="mono">boilerplates.json</span> dari komputer. Di Chrome/Edge, edit file itu akan ikut ter-load.</p>
       </header>
 
+      <section class="panel reveal">
+        <p class="panel-title">Sumber data</p>
+        <div class="card" id="sourceCard">
+          <p class="meta" id="sourceMeta">Belum ada file yang dipilih.</p>
+          <div class="row" style="margin-top: 14px">
+            <button class="btn-primary" id="btnChoose" type="button">Pilih file</button>
+            <a class="btn-ghost" id="btnDownload" href="data/boilerplates.example.json" download="boilerplates.json">Unduh contoh</a>
+            <button class="btn-ghost" id="btnClearSource" type="button" hidden>Hapus sumber</button>
+          </div>
+          <input type="file" id="fileSource" class="file-native" accept=".json,application/json" />
+          <p class="result-note">
+            Unduh contoh, edit di komputer, lalu pilih file itu. Format:
+            <span class="mono">{ "commands": [], "files": [] }</span>
+            Perubahan file diikuti otomatis selama tab ini tetap terbuka.
+          </p>
+        </div>
+      </section>
+
+      <div id="catalog" hidden>
       <section class="panel reveal">
         <p class="panel-title">File</p>
         <div class="card">
@@ -52,8 +71,9 @@
           <pre class="code-block" id="codeBlock"></pre>
         </div>
       </section>
+      </div>
 
-      <div class="empty-state" id="emptyState">Pilih salah satu tombol di atas untuk melihat kodenya.</div>
+      <div class="empty-state" id="emptyState">Unduh contoh JSON, atau pilih file boilerplates.json dari komputer.</div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -73,9 +93,27 @@
         const codeBlock = document.getElementById('codeBlock');
         const btnCopy = document.getElementById('btnCopy');
         const toastEl = document.getElementById('toast');
+        const sourceMeta = document.getElementById('sourceMeta');
+        const btnClearSource = document.getElementById('btnClearSource');
+        const btnChoose = document.getElementById('btnChoose');
+        const fileSource = document.getElementById('fileSource');
+        const sourceCard = document.getElementById('sourceCard');
+        const catalog = document.getElementById('catalog');
+
+        const STORAGE_KEY = 'boilerplate:source';
+        const IDB_NAME = 'html-tools';
+        const IDB_STORE = 'file-handles';
+        const IDB_KEY = 'boilerplate';
+        const WATCH_MS = 1200;
 
         let currentCode = '';
         let toastTimer = null;
+        let selectedKind = '';
+        let selectedKey = '';
+        let fileHandle = null;
+        let watchTimer = null;
+        let lastModified = 0;
+        let lastText = '';
 
         function showToast(msg) {
           toastEl.textContent = msg;
@@ -181,6 +219,8 @@
           if (button) button.classList.add('is-active');
 
           currentCode = getCode(item);
+          selectedKind = kind;
+          selectedKey = String(item.id || item.label || '');
           itemTitle.textContent = item.label || item.id;
           itemDescription.textContent = item.description || '';
           itemFilename.textContent = item.filename || (kind === 'commands' ? 'command.sh' : '');
@@ -201,6 +241,170 @@
           });
         }
 
+        function validateData(data) {
+          if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            throw new Error('JSON harus berupa object dengan keys commands dan files.');
+          }
+          const files = Array.isArray(data.files) ? data.files : [];
+          const commands = Array.isArray(data.commands) ? data.commands : [];
+          if (!files.length && !commands.length) {
+            throw new Error('File JSON tidak berisi commands atau files.');
+          }
+          return { files: files, commands: commands };
+        }
+
+        function resetPreview() {
+          currentCode = '';
+          previewPanel.style.display = 'none';
+          fileButtons.innerHTML = '';
+          commandButtons.innerHTML = '';
+        }
+
+        function applyData(data, filename, opts) {
+          opts = opts || {};
+          const parsed = validateData(data);
+          renderButtons(parsed.files, 'files', fileButtons);
+          renderButtons(parsed.commands, 'commands', commandButtons);
+          catalog.hidden = false;
+          btnClearSource.hidden = false;
+          sourceMeta.innerHTML = opts.watching
+            ? 'Memakai <b>' + escapeHtml(filename || 'boilerplates.json') + '</b> — perubahan di file ikut ter-load.'
+            : 'Memakai <b>' + escapeHtml(filename || 'boilerplates.json') + '</b> — pilih file lagi jika isinya berubah.';
+          emptyState.style.display = parsed.files.length || parsed.commands.length ? 'none' : 'block';
+          emptyState.textContent = 'Pilih salah satu tombol di atas untuk melihat kodenya.';
+
+          if (opts.live && selectedKey) {
+            const list = selectedKind === 'commands' ? parsed.commands : parsed.files;
+            const container = selectedKind === 'commands' ? commandButtons : fileButtons;
+            const item = list.find((entry) => String(entry.id || entry.label || '') === selectedKey);
+            if (item) {
+              const label = item.label || item.id;
+              const button = Array.prototype.find.call(container.querySelectorAll('button'), (btn) => btn.textContent === label);
+              showItem(item, selectedKind, button);
+              return;
+            }
+          }
+
+          const firstFile = fileButtons.querySelector('button');
+          const firstCommand = commandButtons.querySelector('button');
+          if (parsed.files.length && firstFile) {
+            showItem(parsed.files[0], 'files', firstFile);
+          } else if (parsed.commands.length && firstCommand) {
+            showItem(parsed.commands[0], 'commands', firstCommand);
+          }
+        }
+
+        function stopWatch() {
+          clearInterval(watchTimer);
+          watchTimer = null;
+          fileHandle = null;
+          lastModified = 0;
+          lastText = '';
+        }
+
+        function withHandleStore(mode, fn) {
+          return new Promise((resolve, reject) => {
+            const open = indexedDB.open(IDB_NAME, 1);
+            open.onupgradeneeded = () => {
+              if (!open.result.objectStoreNames.contains(IDB_STORE)) {
+                open.result.createObjectStore(IDB_STORE);
+              }
+            };
+            open.onerror = () => reject(open.error);
+            open.onsuccess = () => {
+              const db = open.result;
+              const tx = db.transaction(IDB_STORE, mode);
+              const req = fn(tx.objectStore(IDB_STORE));
+              req.onsuccess = () => resolve(req.result);
+              req.onerror = () => reject(req.error);
+              tx.oncomplete = () => db.close();
+            };
+          });
+        }
+
+        function persistHandle(handle) {
+          return withHandleStore('readwrite', (store) => store.put(handle, IDB_KEY)).catch(() => {});
+        }
+
+        function readPersistedHandle() {
+          return withHandleStore('readonly', (store) => store.get(IDB_KEY)).catch(() => null);
+        }
+
+        function forgetHandle() {
+          return withHandleStore('readwrite', (store) => store.delete(IDB_KEY)).catch(() => {});
+        }
+
+        function startWatch(handle) {
+          clearInterval(watchTimer);
+          fileHandle = handle;
+          watchTimer = setInterval(() => {
+            ingestHandle(fileHandle, { live: true });
+          }, WATCH_MS);
+        }
+
+        async function ingestHandle(handle, opts) {
+          if (!handle) return;
+          opts = opts || {};
+          try {
+            const file = await handle.getFile();
+            if (opts.live && file.lastModified === lastModified) return;
+            const text = await file.text();
+            lastModified = file.lastModified;
+            if (opts.live && text === lastText) return;
+            loadFromText(text, file.name, { live: !!opts.live, watching: true });
+            lastText = text;
+            if (opts.toast) showToast('File dimuat: ' + file.name);
+            else if (opts.live) showToast('File diperbarui.');
+          } catch (err) {
+            const invalid = err && String(err.message || '').indexOf('JSON tidak valid') === 0;
+            if (opts.live && invalid) {
+              sourceMeta.innerHTML =
+                'Memakai <b>' +
+                escapeHtml((fileHandle && fileHandle.name) || 'boilerplates.json') +
+                '</b> — JSON belum valid, menunggu simpan.';
+              return;
+            }
+            if (!opts.live) showToast((err && err.message) || 'Gagal membaca file JSON.');
+          }
+        }
+
+        async function useHandle(handle, toast) {
+          await persistHandle(handle);
+          await ingestHandle(handle, { toast: !!toast });
+          startWatch(handle);
+        }
+
+        function clearSource() {
+          stopWatch();
+          forgetHandle();
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch (_) {}
+          resetPreview();
+          catalog.hidden = true;
+          btnClearSource.hidden = true;
+          sourceMeta.textContent = 'Belum ada file yang dipilih.';
+          emptyState.style.display = 'block';
+          emptyState.textContent = 'Unduh contoh JSON, atau pilih file boilerplates.json dari komputer.';
+          fileSource.value = '';
+          selectedKind = '';
+          selectedKey = '';
+        }
+
+        function loadFromText(text, filename, opts) {
+          opts = opts || {};
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (err) {
+            throw new Error('JSON tidak valid: ' + err.message);
+          }
+          applyData(data, filename, opts);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ filename: filename, data: data }));
+          } catch (_) {}
+        }
+
         btnCopy.addEventListener('click', () => {
           if (!currentCode) return;
           navigator.clipboard
@@ -213,25 +417,102 @@
             });
         });
 
-        fetch('data/boilerplates.json')
-          .then((res) => {
-            if (!res.ok) throw new Error('Gagal memuat data boilerplate.');
-            return res.json();
-          })
-          .then((data) => {
-            const files = Array.isArray(data.files) ? data.files : [];
-            const commands = Array.isArray(data.commands) ? data.commands : [];
-            renderButtons(files, 'files', fileButtons);
-            renderButtons(commands, 'commands', commandButtons);
-            if (files.length) {
-              const first = fileButtons.querySelector('button');
-              showItem(files[0], 'files', first);
+        btnClearSource.addEventListener('click', () => {
+          clearSource();
+          showToast('Sumber data dihapus.');
+        });
+
+        function readLocalFile(file) {
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              loadFromText(String(reader.result || ''), file.name, { watching: false });
+              showToast('File dimuat: ' + file.name);
+            } catch (err) {
+              showToast(err.message || 'Gagal membaca file JSON.');
             }
+          };
+          reader.onerror = () => showToast('Gagal membaca file.');
+          reader.readAsText(file);
+        }
+
+        async function openFilePicker() {
+          if (window.showOpenFilePicker) {
+            try {
+              const handles = await window.showOpenFilePicker({
+                multiple: false,
+                types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+              });
+              if (handles && handles[0]) {
+                await useHandle(handles[0], true);
+                return;
+              }
+            } catch (err) {
+              if (err && err.name === 'AbortError') return;
+            }
+          }
+          try {
+            if (typeof fileSource.showPicker === 'function') {
+              fileSource.showPicker();
+              return;
+            }
+          } catch (_) {}
+          fileSource.click();
+        }
+
+        btnChoose.addEventListener('click', () => {
+          openFilePicker();
+        });
+
+        fileSource.addEventListener('change', () => {
+          stopWatch();
+          forgetHandle();
+          readLocalFile(fileSource.files && fileSource.files[0]);
+        });
+
+        sourceCard.addEventListener('dragover', (event) => {
+          event.preventDefault();
+          sourceCard.classList.add('is-drop');
+        });
+        sourceCard.addEventListener('dragleave', () => sourceCard.classList.remove('is-drop'));
+        sourceCard.addEventListener('drop', (event) => {
+          event.preventDefault();
+          sourceCard.classList.remove('is-drop');
+          const item = event.dataTransfer && event.dataTransfer.items && event.dataTransfer.items[0];
+          if (item && typeof item.getAsFileSystemHandle === 'function') {
+            Promise.resolve(item.getAsFileSystemHandle())
+              .then((handle) => {
+                if (handle && handle.kind === 'file') return useHandle(handle, true);
+                readLocalFile(event.dataTransfer.files && event.dataTransfer.files[0]);
+              })
+              .catch(() => readLocalFile(event.dataTransfer.files && event.dataTransfer.files[0]));
+            return;
+          }
+          readLocalFile(event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]);
+        });
+
+        function restoreSavedData() {
+          try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+            if (saved && saved.data) applyData(saved.data, saved.filename, { watching: false });
+          } catch (_) {}
+        }
+
+        readPersistedHandle()
+          .then(async (handle) => {
+            if (!handle || typeof handle.queryPermission !== 'function') {
+              restoreSavedData();
+              return;
+            }
+            const perm = await handle.queryPermission({ mode: 'read' });
+            if (perm === 'granted') {
+              await useHandle(handle, false);
+              return;
+            }
+            restoreSavedData();
           })
-          .catch((err) => {
-            emptyState.style.display = 'block';
-            emptyState.textContent = err.message || 'Gagal memuat data boilerplate.';
-          });
+          .catch(restoreSavedData);
       })();
     </script>
     <script src="js/pwa.js"></script>

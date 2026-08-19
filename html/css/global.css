@@ -423,7 +423,9 @@ input[type='number']:focus {
 button,
 a.btn-ghost,
 a.btn-primary,
-a.btn-danger {
+a.btn-danger,
+label.btn-primary,
+label.btn-ghost {
   font-family: var(--sans);
   font-size: 13px;
   font-weight: 500;
@@ -434,6 +436,7 @@ a.btn-danger {
   padding: 8px 14px;
   cursor: pointer;
   text-decoration: none;
+  display: inline-block;
   transition:
     background 160ms var(--ease),
     color 160ms var(--ease),
@@ -441,13 +444,15 @@ a.btn-danger {
     transform 160ms var(--ease);
 }
 button:hover,
-a.btn-ghost:hover {
+a.btn-ghost:hover,
+label.btn-ghost:hover {
   border-color: #d5d5d5;
 }
 button:active,
 a.btn-ghost:active,
 a.btn-primary:active,
-a.btn-danger:active {
+a.btn-danger:active,
+label.btn-primary:active {
   transform: scale(0.98);
 }
 .btn-primary {
@@ -710,6 +715,17 @@ kbd {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+.file-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.card.is-drop {
+  outline: 1px dashed var(--text);
+  outline-offset: 2px;
 }
 button.is-active {
   background: var(--text);

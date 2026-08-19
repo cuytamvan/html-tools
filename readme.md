@@ -4,13 +4,15 @@ Kumpulan tool HTML statis. Style bersama ada di `html/css/global.css`. JavaScrip
 
 ## Setup Boilerplate
 
-Halaman Boilerplate membaca `html/data/boilerplates.json`. File ini tidak ikut di-commit; salin dari contoh:
+Di halaman Boilerplate, unduh contoh JSON lalu pilih file itu dari komputer:
 
-```bash
-cp html/data/boilerplates.example.json html/data/boilerplates.json
-```
+1. Klik **Unduh contoh** (tersimpan sebagai `boilerplates.json`)
+2. Edit file jika perlu
+3. Klik **Pilih file** dan pilih `boilerplates.json`
 
-Edit `html/data/boilerplates.json` untuk menambah atau mengubah perintah dan file. Struktur datanya:
+Di Chrome atau Edge, selama tab Boilerplate tetap terbuka, perubahan pada file itu ikut ter-load otomatis. Browser lain perlu pilih file lagi setelah diedit.
+
+Struktur datanya:
 
 ```json
 {
