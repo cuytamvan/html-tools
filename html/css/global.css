@@ -139,6 +139,9 @@ header p {
   background: var(--pale-blue);
   color: var(--pale-blue-text);
 }
+table .tag {
+  margin: 0;
+}
 .tag.green {
   background: var(--pale-green);
   color: var(--pale-green-text);
@@ -173,10 +176,6 @@ header p {
   grid-row: span 2;
   min-height: 376px;
 }
-.tool-item:nth-child(4) {
-  grid-column: 1 / -1;
-  min-height: 160px;
-}
 .tool-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
@@ -201,8 +200,7 @@ header p {
   .tool-grid {
     grid-template-columns: 1fr;
   }
-  .tool-item:nth-child(1),
-  .tool-item:nth-child(4) {
+  .tool-item:nth-child(1) {
     grid-column: auto;
     grid-row: auto;
     min-height: 180px;
@@ -293,6 +291,52 @@ textarea {
 textarea:focus {
   outline: none;
   border-color: var(--text);
+}
+.input-mono {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.pattern-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pattern-wrap .slash {
+  font-family: var(--mono);
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+}
+.pattern-wrap input {
+  flex: 1;
+  min-width: 0;
+}
+.regex-preview {
+  min-height: 160px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+}
+.regex-preview.is-empty {
+  color: var(--text-muted);
+}
+.json-pane {
+  min-height: 240px;
+}
+.hint:empty {
+  display: none;
+}
+mark.mark-alt {
+  background: var(--pale-blue);
+  color: var(--pale-blue-text);
 }
 
 .form-grid {

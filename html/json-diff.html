@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>JSON Diff</title>
+    <meta name="theme-color" content="#F7F6F3" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="HTML Tools" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="css/global.css" />
+  </head>
+  <body>
+    <div class="ambient" aria-hidden="true"></div>
+
+    <div class="wrap">
+      <header class="reveal">
+        <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
+        <h1>JSON Diff</h1>
+        <p>Bandingkan dua JSON. Objek dan array diurai per path, bukan per baris teks.</p>
+      </header>
+
+      <div class="split-grid">
+        <section class="panel card reveal">
+          <p class="panel-title">JSON A</p>
+          <textarea id="jsonA" spellcheck="false" class="json-pane"></textarea>
+          <p class="hint" id="errA"></p>
+        </section>
+        <section class="panel card reveal">
+          <p class="panel-title">JSON B</p>
+          <textarea id="jsonB" spellcheck="false" class="json-pane"></textarea>
+          <p class="hint" id="errB"></p>
+        </section>
+      </div>
+
+      <section class="panel reveal" style="margin-top: 12px">
+        <div class="row">
+          <button class="btn-primary" id="btnCompare" type="button">Bandingkan</button>
+          <button class="btn-ghost" id="btnPretty" type="button">Rapihkan</button>
+          <button class="btn-ghost" id="btnSwap" type="button">Tukar A / B</button>
+          <button class="btn-ghost" id="btnSample" type="button">Muat contoh</button>
+        </div>
+      </section>
+
+      <section class="panel reveal">
+        <p class="panel-title">Perbedaan</p>
+        <div class="card">
+          <p class="meta" id="diffMeta">Isi kedua sisi, lalu bandingkan.</p>
+          <div class="table-scroll" style="margin-top: 12px">
+            <table id="diffTable" style="display: none">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Path</th>
+                  <th>JSON A</th>
+                  <th>JSON B</th>
+                </tr>
+              </thead>
+              <tbody id="diffBody"></tbody>
+            </table>
+            <div class="empty-state" id="diffEmpty" style="padding: 32px 8px">Belum ada perbandingan.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="js/ui.js"></script>
+    <script>
+      (function () {
+        'use strict';
+
+        const jsonA = document.getElementById('jsonA');
+        const jsonB = document.getElementById('jsonB');
+        const errA = document.getElementById('errA');
+        const errB = document.getElementById('errB');
+        const diffMeta = document.getElementById('diffMeta');
+        const diffTable = document.getElementById('diffTable');
+        const diffBody = document.getElementById('diffBody');
+        const diffEmpty = document.getElementById('diffEmpty');
+
+        const SAMPLE_A = {
+          nama: 'Budi Santoso',
+          umur: 28,
+          kota: 'Jakarta',
+          aktif: true,
+          alamat: { jalan: 'Jl. Merdeka No. 1', kode: '10110' },
+          tag: ['ops', 'backend'],
+        };
+        const SAMPLE_B = {
+          nama: 'Budi Santoso',
+          umur: 29,
+          kota: 'Bandung',
+          aktif: true,
+          alamat: { jalan: 'Jl. Merdeka No. 1', kode: '40111' },
+          tag: ['ops', 'backend', 'oncall'],
+          email: 'budi.santoso@kontak.id',
+        };
+
+        function escapeHtml(str) {
+          return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        }
+
+        function isPlainObject(v) {
+          return v !== null && typeof v === 'object' && !Array.isArray(v);
+        }
+
+        function parseSide(raw, errEl) {
+          const text = String(raw || '').trim();
+          if (!text) {
+            errEl.textContent = 'Kosong.';
+            return { ok: false };
+          }
+          try {
+            errEl.textContent = '';
+            return { ok: true, value: JSON.parse(text) };
+          } catch (err) {
+            errEl.textContent = 'JSON tidak valid: ' + err.message;
+            return { ok: false };
+          }
+        }
+
+        function pathJoin(base, key) {
+          if (typeof key === 'number') return (base || '$') + '[' + key + ']';
+          if (/^[A-Za-z_][\w$]*$/.test(key)) return (base ? base + '.' : '') + key;
+          return (base || '$') + '[' + JSON.stringify(key) + ']';
+        }
+
+        function shortJson(v) {
+          if (v === undefined) return '—';
+          try {
+            const s = JSON.stringify(v);
+            if (s.length > 140) return s.slice(0, 137) + '...';
+            return s;
+          } catch (_) {
+            return String(v);
+          }
+        }
+
+        function walk(a, b, path, out) {
+          if (Object.is(a, b)) return;
+
+          if (isPlainObject(a) && isPlainObject(b)) {
+            const keys = Object.keys(a).concat(Object.keys(b).filter(function (k) {
+              return !Object.prototype.hasOwnProperty.call(a, k);
+            }));
+            for (let i = 0; i < keys.length; i++) {
+              const k = keys[i];
+              const hasA = Object.prototype.hasOwnProperty.call(a, k);
+              const hasB = Object.prototype.hasOwnProperty.call(b, k);
+              const next = pathJoin(path, k);
+              if (!hasA) out.push({ type: 'add', path: next, left: undefined, right: b[k] });
+              else if (!hasB) out.push({ type: 'del', path: next, left: a[k], right: undefined });
+              else walk(a[k], b[k], next, out);
+            }
+            return;
+          }
+
+          if (Array.isArray(a) && Array.isArray(b)) {
+            const n = Math.max(a.length, b.length);
+            for (let i = 0; i < n; i++) {
+              const next = pathJoin(path, i);
+              if (i >= a.length) out.push({ type: 'add', path: next, left: undefined, right: b[i] });
+              else if (i >= b.length) out.push({ type: 'del', path: next, left: a[i], right: undefined });
+              else walk(a[i], b[i], next, out);
+            }
+            return;
+          }
+
+          out.push({ type: 'chg', path: path || '$', left: a, right: b });
+        }
+
+        function typeLabel(type) {
+          if (type === 'add') return '<span class="tag green">tambah</span>';
+          if (type === 'del') return '<span class="tag red">hapus</span>';
+          return '<span class="tag">ubah</span>';
+        }
+
+        function compare() {
+          const left = parseSide(jsonA.value, errA);
+          const right = parseSide(jsonB.value, errB);
+          if (!left.ok || !right.ok) {
+            diffTable.style.display = 'none';
+            diffEmpty.style.display = 'block';
+            diffEmpty.textContent = 'Perbaiki JSON yang tidak valid.';
+            diffMeta.textContent = 'Tidak bisa membandingkan.';
+            return;
+          }
+
+          const rows = [];
+          walk(left.value, right.value, '', rows);
+
+          if (!rows.length) {
+            diffTable.style.display = 'none';
+            diffEmpty.style.display = 'block';
+            diffEmpty.textContent = 'Kedua JSON sama.';
+            diffMeta.textContent = 'Tidak ada perbedaan.';
+            return;
+          }
+
+          let add = 0;
+          let del = 0;
+          let chg = 0;
+          rows.forEach(function (r) {
+            if (r.type === 'add') add++;
+            else if (r.type === 'del') del++;
+            else chg++;
+          });
+
+          diffMeta.textContent =
+            rows.length +
+            ' perbedaan · ' +
+            chg +
+            ' diubah · ' +
+            add +
+            ' ditambah · ' +
+            del +
+            ' dihapus';
+
+          diffEmpty.style.display = 'none';
+          diffTable.style.display = 'table';
+          diffBody.innerHTML = rows
+            .map(function (r) {
+              return (
+                '<tr>' +
+                '<td>' +
+                typeLabel(r.type) +
+                '</td>' +
+                '<td class="cell-json">' +
+                escapeHtml(r.path) +
+                '</td>' +
+                '<td class="cell-json">' +
+                escapeHtml(shortJson(r.left)) +
+                '</td>' +
+                '<td class="cell-json">' +
+                escapeHtml(shortJson(r.right)) +
+                '</td>' +
+                '</tr>'
+              );
+            })
+            .join('');
+        }
+
+        function prettySide(el, errEl) {
+          const parsed = parseSide(el.value, errEl);
+          if (!parsed.ok) return;
+          el.value = JSON.stringify(parsed.value, null, 2);
+        }
+
+        document.getElementById('btnCompare').addEventListener('click', compare);
+        document.getElementById('btnPretty').addEventListener('click', function () {
+          prettySide(jsonA, errA);
+          prettySide(jsonB, errB);
+          compare();
+        });
+        document.getElementById('btnSwap').addEventListener('click', function () {
+          const tmp = jsonA.value;
+          jsonA.value = jsonB.value;
+          jsonB.value = tmp;
+          compare();
+        });
+        document.getElementById('btnSample').addEventListener('click', function () {
+          jsonA.value = JSON.stringify(SAMPLE_A, null, 2);
+          jsonB.value = JSON.stringify(SAMPLE_B, null, 2);
+          errA.textContent = '';
+          errB.textContent = '';
+          compare();
+        });
+
+        jsonA.value = JSON.stringify(SAMPLE_A, null, 2);
+        jsonB.value = JSON.stringify(SAMPLE_B, null, 2);
+        compare();
+      })();
+    </script>
+    <script src="js/pwa.js"></script>
+  </body>
+</html>

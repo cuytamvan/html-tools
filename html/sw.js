@@ -1,10 +1,12 @@
-const CACHE_NAME = 'html-tools-v2';
+const CACHE_NAME = 'html-tools-v5';
 const PRECACHE = [
   './',
   './index.html',
   './json-searcher.html',
+  './json-diff.html',
   './overtime.html',
   './hashids-decoder.html',
+  './regex-tester.html',
   './boilerplate.html',
   './css/global.css',
   './css/landing.css',

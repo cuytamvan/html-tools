@@ -45,8 +45,10 @@ Buka:
 
 - http://localhost:8080/
 - http://localhost:8080/json-searcher.html
+- http://localhost:8080/json-diff.html
 - http://localhost:8080/overtime.html
 - http://localhost:8080/hashids-decoder.html
+- http://localhost:8080/regex-tester.html
 - http://localhost:8080/boilerplate.html
 
 Hentikan server dengan `Ctrl+C`, atau:

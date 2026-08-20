@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Regex Tester</title>
+    <meta name="theme-color" content="#F7F6F3" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="HTML Tools" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="css/global.css" />
+  </head>
+  <body>
+    <div class="ambient" aria-hidden="true"></div>
+
+    <div class="wrap">
+      <header class="reveal">
+        <a class="btn-ghost btn-sm nav-home" href="index.html">Kembali</a>
+        <h1>Regex Tester</h1>
+        <p>Uji pola JavaScript terhadap teks, lihat semua kecocokan, grup, dan hasil ganti.</p>
+      </header>
+
+      <section class="panel reveal">
+        <p class="panel-title">Pola</p>
+        <div class="card">
+          <div class="field">
+            <label for="pattern">Regular expression</label>
+            <div class="pattern-wrap">
+              <span class="slash" aria-hidden="true">/</span>
+              <input
+                type="text"
+                id="pattern"
+                class="input-mono"
+                value="\b[A-Z][a-z]+\b"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="pola"
+              />
+              <span class="slash" aria-hidden="true">/</span>
+            </div>
+          </div>
+          <div class="field" style="margin-top: 16px">
+            <label>Bendera</label>
+            <div class="choice-group" id="flagButtons">
+              <button type="button" class="btn-ghost btn-sm is-active" data-flag="g" title="global">g</button>
+              <button type="button" class="btn-ghost btn-sm" data-flag="i" title="ignore case">i</button>
+              <button type="button" class="btn-ghost btn-sm" data-flag="m" title="multiline">m</button>
+              <button type="button" class="btn-ghost btn-sm" data-flag="s" title="dotAll">s</button>
+              <button type="button" class="btn-ghost btn-sm" data-flag="u" title="unicode">u</button>
+              <button type="button" class="btn-ghost btn-sm" data-flag="y" title="sticky">y</button>
+            </div>
+            <p class="hint">g global, i ignore case, m multiline, s dotAll, u unicode, y sticky</p>
+          </div>
+          <div class="error-box" id="errorBox"></div>
+        </div>
+      </section>
+
+      <div class="split-grid">
+        <section class="panel card reveal">
+          <p class="panel-title">Teks uji</p>
+          <textarea id="haystack" spellcheck="false">
+Budi Santoso tinggal di Jakarta.
+Nomornya 0812-3456-7890, email budi.santoso@kontak.id.
+Pesanan #A-2041 dikirim 19 Agustus 2026.</textarea>
+        </section>
+        <section class="panel card reveal">
+          <p class="panel-title">Pratinjau</p>
+          <pre class="regex-preview" id="preview"></pre>
+        </section>
+      </div>
+
+      <section class="panel reveal">
+        <p class="panel-title">Kecocokan</p>
+        <div class="card">
+          <p class="meta" id="matchMeta">0 cocokan</p>
+          <div class="table-scroll" style="margin-top: 12px">
+            <table id="matchTable" style="display: none">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Teks</th>
+                  <th>Indeks</th>
+                  <th>Grup</th>
+                </tr>
+              </thead>
+              <tbody id="matchBody"></tbody>
+            </table>
+            <div class="empty-state" id="matchEmpty" style="padding: 32px 8px">Belum ada yang cocok.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel reveal">
+        <p class="panel-title">Ganti</p>
+        <div class="card">
+          <div class="field">
+            <label for="replacement">String pengganti</label>
+            <input
+              type="text"
+              id="replacement"
+              class="input-mono"
+              value="[$&]"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="$& atau $1"
+            />
+            <p class="hint"><span class="mono">$&amp;</span> seluruh cocokan, <span class="mono">$1</span> grup pertama</p>
+          </div>
+          <pre class="regex-preview" id="replaceOut" style="margin-top: 16px"></pre>
+        </div>
+      </section>
+    </div>
+
+    <script src="js/ui.js"></script>
+    <script>
+      (function () {
+        'use strict';
+
+        const MAX_MATCHES = 400;
+        const patternEl = document.getElementById('pattern');
+        const haystackEl = document.getElementById('haystack');
+        const replacementEl = document.getElementById('replacement');
+        const previewEl = document.getElementById('preview');
+        const replaceOutEl = document.getElementById('replaceOut');
+        const errorBox = document.getElementById('errorBox');
+        const matchMeta = document.getElementById('matchMeta');
+        const matchTable = document.getElementById('matchTable');
+        const matchBody = document.getElementById('matchBody');
+        const matchEmpty = document.getElementById('matchEmpty');
+        const flagButtons = document.getElementById('flagButtons');
+
+        function escapeHtml(str) {
+          return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        }
+
+        function flagsFromUi() {
+          return Array.prototype.map
+            .call(flagButtons.querySelectorAll('.is-active'), function (btn) {
+              return btn.getAttribute('data-flag');
+            })
+            .join('');
+        }
+
+        function collectMatches(re, text) {
+          const matches = [];
+          if (re.global || re.sticky) {
+            re.lastIndex = 0;
+            let m;
+            while ((m = re.exec(text))) {
+              matches.push(m);
+              if (m[0].length === 0) re.lastIndex += 1;
+              if (matches.length >= MAX_MATCHES) break;
+            }
+          } else {
+            const m = re.exec(text);
+            if (m) matches.push(m);
+          }
+          return matches;
+        }
+
+        function highlight(text, matches) {
+          if (!text) return '<span class="meta">Teks uji kosong.</span>';
+          if (!matches.length) return escapeHtml(text);
+          let html = '';
+          let last = 0;
+          for (let i = 0; i < matches.length; i++) {
+            const m = matches[i];
+            const start = m.index;
+            const end = start + m[0].length;
+            if (start < last) continue;
+            html += escapeHtml(text.slice(last, start));
+            if (end > start) {
+              const cls = i % 2 === 1 ? 'mark-alt' : '';
+              html += '<mark' + (cls ? ' class="' + cls + '"' : '') + '>' + escapeHtml(text.slice(start, end)) + '</mark>';
+            }
+            last = Math.max(last, end);
+          }
+          html += escapeHtml(text.slice(last));
+          return html;
+        }
+
+        function groupsText(m) {
+          const parts = [];
+          for (let i = 1; i < m.length; i++) {
+            if (m[i] === undefined) continue;
+            parts.push('$' + i + ' ' + m[i]);
+          }
+          if (m.groups) {
+            Object.keys(m.groups).forEach(function (name) {
+              if (m.groups[name] !== undefined) parts.push(name + ' ' + m.groups[name]);
+            });
+          }
+          return parts.length ? parts.join(' · ') : '—';
+        }
+
+        function run() {
+          const pattern = patternEl.value;
+          const text = haystackEl.value;
+          errorBox.style.display = 'none';
+          errorBox.textContent = '';
+
+          if (!pattern) {
+            previewEl.innerHTML = escapeHtml(text) || '<span class="meta">Isi pola untuk mulai.</span>';
+            previewEl.classList.toggle('is-empty', !text);
+            replaceOutEl.textContent = text;
+            matchMeta.textContent = '0 cocokan';
+            matchTable.style.display = 'none';
+            matchEmpty.style.display = 'block';
+            matchEmpty.textContent = 'Isi pola regular expression.';
+            return;
+          }
+
+          let re;
+          try {
+            re = new RegExp(pattern, flagsFromUi());
+          } catch (err) {
+            errorBox.textContent = 'Pola tidak valid: ' + err.message;
+            errorBox.style.display = 'block';
+            previewEl.textContent = text;
+            replaceOutEl.textContent = text;
+            matchMeta.textContent = 'Pola error';
+            matchTable.style.display = 'none';
+            matchEmpty.style.display = 'block';
+            matchEmpty.textContent = 'Perbaiki pola terlebih dahulu.';
+            return;
+          }
+
+          const matches = collectMatches(re, text);
+          previewEl.innerHTML = highlight(text, matches);
+          previewEl.classList.remove('is-empty');
+
+          try {
+            re.lastIndex = 0;
+            replaceOutEl.textContent = text.replace(re, replacementEl.value);
+          } catch (err) {
+            replaceOutEl.textContent = text;
+          }
+
+          const capped = matches.length >= MAX_MATCHES;
+          matchMeta.textContent =
+            matches.length + ' cocokan' + (capped ? ' (dibatasi ' + MAX_MATCHES + ')' : '');
+
+          if (!matches.length) {
+            matchTable.style.display = 'none';
+            matchEmpty.style.display = 'block';
+            matchEmpty.textContent = 'Tidak ada yang cocok.';
+            return;
+          }
+
+          matchEmpty.style.display = 'none';
+          matchTable.style.display = 'table';
+          matchBody.innerHTML = matches
+            .map(function (m, i) {
+              return (
+                '<tr><td class="idx-col">' +
+                (i + 1) +
+                '</td><td class="cell-value">' +
+                escapeHtml(m[0]) +
+                '</td><td class="idx-col">' +
+                m.index +
+                '</td><td class="cell-json">' +
+                escapeHtml(groupsText(m)) +
+                '</td></tr>'
+              );
+            })
+            .join('');
+        }
+
+        flagButtons.addEventListener('click', function (e) {
+          const btn = e.target.closest('button[data-flag]');
+          if (!btn) return;
+          btn.classList.toggle('is-active');
+          run();
+        });
+
+        [patternEl, haystackEl, replacementEl].forEach(function (el) {
+          el.addEventListener('input', run);
+        });
+
+        run();
+      })();
+    </script>
+    <script src="js/pwa.js"></script>
+  </body>
+</html>

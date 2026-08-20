@@ -31,6 +31,12 @@
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
+      "name": "JSON Diff",
+      "short_name": "Diff",
+      "url": "json-diff.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
       "name": "Perhitungan Lembur",
       "short_name": "Lembur",
       "url": "overtime.html",
@@ -40,6 +46,12 @@
       "name": "Hashids",
       "short_name": "Hashids",
       "url": "hashids-decoder.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Regex Tester",
+      "short_name": "Regex",
+      "url": "regex-tester.html",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
