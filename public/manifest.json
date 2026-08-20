@@ -27,37 +27,55 @@
     {
       "name": "JSON Searcher",
       "short_name": "JSON",
-      "url": "json-searcher.html",
+      "url": "./#/json-searcher",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "JSON Diff",
       "short_name": "Diff",
-      "url": "json-diff.html",
+      "url": "./#/json-diff",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "JSON ke Tipe",
+      "short_name": "Tipe",
+      "url": "./#/json-types",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "CSV / JSON",
+      "short_name": "CSV",
+      "url": "./#/csv-json",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Perhitungan Lembur",
       "short_name": "Lembur",
-      "url": "overtime.html",
+      "url": "./#/overtime",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Hashids",
       "short_name": "Hashids",
-      "url": "hashids-decoder.html",
+      "url": "./#/hashids",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Regex Tester",
       "short_name": "Regex",
-      "url": "regex-tester.html",
+      "url": "./#/regex-tester",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "User Agent Parser",
+      "short_name": "UA",
+      "url": "./#/user-agent",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Boilerplate",
       "short_name": "Boilerplate",
-      "url": "boilerplate.html",
+      "url": "./#/boilerplate",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]

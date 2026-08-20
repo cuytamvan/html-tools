@@ -1,6 +1,6 @@
 # HTML Tools
 
-Kumpulan tool HTML statis. Style bersama ada di `html/css/global.css`. JavaScript tetap di masing-masing file HTML.
+Kumpulan tool yang berjalan di browser. Aplikasi Vue di root repo, halaman tool ada di `src/pages`.
 
 ## Setup Boilerplate
 
@@ -21,35 +21,36 @@ Struktur datanya:
 }
 ```
 
+## Jalankan di lokal
+
+```bash
+bun install
+bun run dev
+```
+
+Buka http://localhost:5173/
+
+- http://localhost:5173/#/
+- http://localhost:5173/#/json-searcher
+- http://localhost:5173/#/json-diff
+- http://localhost:5173/#/json-types
+- http://localhost:5173/#/csv-json
+- http://localhost:5173/#/overtime
+- http://localhost:5173/#/hashids
+- http://localhost:5173/#/regex-tester
+- http://localhost:5173/#/user-agent
+- http://localhost:5173/#/boilerplate
+
 ## Run dengan Docker (nginx)
 
-Bangun image dari Dockerfile:
+Bangun image dari Dockerfile (stage build Vue, lalu nginx menyajikan `dist`):
 
 ```bash
 docker build -t html-tools .
 docker run --rm -p 8080:80 html-tools
 ```
 
-Atau mount folder `html` ke nginx:
-
-```bash
-docker run -d --name html-tools \
-  -p 8080:80 \
-  -v "$(pwd)/html:/usr/share/nginx/html:ro" \
-  --restart unless-stopped nginx:alpine
-```
-
-Folder `html` di-mount ke document root nginx. Port **8080** di host diarahkan ke port 80 di container.
-
-Buka:
-
-- http://localhost:8080/
-- http://localhost:8080/json-searcher.html
-- http://localhost:8080/json-diff.html
-- http://localhost:8080/overtime.html
-- http://localhost:8080/hashids-decoder.html
-- http://localhost:8080/regex-tester.html
-- http://localhost:8080/boilerplate.html
+Port **8080** di host diarahkan ke port 80 di container. Buka http://localhost:8080/
 
 Hentikan server dengan `Ctrl+C`, atau:
 

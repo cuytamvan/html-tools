@@ -30,6 +30,9 @@
 html {
   background: var(--bg);
 }
+#app {
+  min-height: 100%;
+}
 body {
   margin: 0;
   background: var(--bg);

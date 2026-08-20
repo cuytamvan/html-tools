@@ -5,4 +5,8 @@
 readme.md
 .prettierrc
 .gitignore
-html/data/boilerplates.json
+html
+node_modules
+dist
+dist-ssr
+*.local
