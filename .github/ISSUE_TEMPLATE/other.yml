@@ -1,0 +1,11 @@
+name: Other
+description: A question or anything that does not fit the other categories.
+title: "[other] "
+labels: ["question"]
+body:
+  - type: textarea
+    id: describe
+    attributes:
+      label: Details
+    validations:
+      required: true

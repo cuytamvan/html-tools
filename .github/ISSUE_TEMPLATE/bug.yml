@@ -1,0 +1,30 @@
+name: Bug
+description: Something is not working as expected.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: describe
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Short steps to reproduce the issue.
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. See error ...
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      placeholder: JSON Searcher, CSV / JSON, ...

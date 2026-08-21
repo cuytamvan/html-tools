@@ -1,0 +1,17 @@
+name: Feature
+description: Propose a new feature or tool.
+title: "[feature] "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: describe
+    attributes:
+      label: Feature
+      description: What should be added?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What problem does this solve?

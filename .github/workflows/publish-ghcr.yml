@@ -6,6 +6,8 @@ on:
       - main
     tags:
       - 'v*'
+    paths-ignore:
+      - '.github/ISSUE_TEMPLATE/**'
 
 env:
   REGISTRY: ghcr.io

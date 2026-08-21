@@ -1,0 +1,12 @@
+name: Documentation
+description: Fix the readme, comments, or on-page copy.
+title: "[docs] "
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: describe
+    attributes:
+      label: What to change
+      description: Which file or page, and what is unclear?
+    validations:
+      required: true
