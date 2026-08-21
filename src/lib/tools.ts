@@ -9,7 +9,8 @@ export type ToolId =
   | 'hashids'
   | 'regexTester'
   | 'userAgent'
-  | 'boilerplate';
+  | 'boilerplate'
+  | 'qrCode';
 
 export type Tool = {
   id: ToolId;
@@ -28,4 +29,5 @@ export const tools: Tool[] = [
   { id: 'regexTester', path: '/regex-tester', tag: 'Regex', tagClass: 'blue' },
   { id: 'userAgent', path: '/user-agent', tag: 'Web', tagClass: 'green' },
   { id: 'boilerplate', path: '/boilerplate', tag: 'File', tagClass: 'red' },
+  { id: 'qrCode', path: '/qr-code', tag: 'QR', tagClass: 'green' },
 ];

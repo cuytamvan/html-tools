@@ -40,6 +40,7 @@ Open http://localhost:5173/
 - http://localhost:5173/#/regex-tester
 - http://localhost:5173/#/user-agent
 - http://localhost:5173/#/boilerplate
+- http://localhost:5173/#/qr-code
 
 ## Run with Docker (nginx)
 
