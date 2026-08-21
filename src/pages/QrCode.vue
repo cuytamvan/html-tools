@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import QRCode from 'qrcode';
 import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n } from '@/i18n';
 
 import ToolLayout from '@/components/ToolLayout.vue';
 import { useToast } from '@/composables/useToast';
 import { downloadFile } from '@/lib/escape';
+import { cn, ui } from '@/lib/ui';
 
 type EccLevel = 'L' | 'M' | 'Q' | 'H';
 
@@ -86,94 +87,98 @@ async function copyPng() {
 
 <template>
   <ToolLayout :title="t('tools.qrCode.title')" :description="t('qrCode.lead')">
-    <div class="split-grid">
-      <section class="panel reveal">
-        <p class="panel-title">{{ t('common.input') }}</p>
-        <div class="card">
-          <div class="field">
-            <label for="qrText">{{ t('qrCode.content') }}</label>
+    <div :class="ui.split">
+      <section class="reveal">
+        <p :class="ui.panelTitle">{{ t('common.input') }}</p>
+        <div :class="ui.card">
+          <div>
+            <label :class="ui.label" for="qrText">{{ t('qrCode.content') }}</label>
             <textarea
               id="qrText"
               v-model="text"
-              class="json-pane"
+              :class="[ui.textarea, ui.jsonPane]"
               spellcheck="false"
               :placeholder="t('qrCode.placeholder')"
             ></textarea>
-            <p class="hint">{{ t('qrCode.contentHint') }}</p>
+            <p :class="ui.hint">{{ t('qrCode.contentHint') }}</p>
           </div>
-          <div class="form-grid cols-2" style="margin-top: 20px">
-            <div class="field">
-              <label>{{ t('qrCode.ecc') }}</label>
-              <div class="choice-group">
+          <div :class="[ui.form, 'mt-5']">
+            <div>
+              <label :class="ui.label">{{ t('qrCode.ecc') }}</label>
+              <div :class="ui.choices">
                 <button
                   v-for="level in ECC_LEVELS"
                   :key="level"
                   type="button"
-                  class="btn-ghost btn-sm"
-                  :class="{ 'is-active': ecc === level }"
+                  :class="cn(ui.btnGhostSm, ecc === level && ui.btnActive)"
                   @click="ecc = level"
                 >
                   {{ level }}
                 </button>
               </div>
-              <p class="hint">{{ t('qrCode.eccHint') }}</p>
+              <p :class="ui.hint">{{ t('qrCode.eccHint') }}</p>
             </div>
-            <div class="field">
-              <label>{{ t('qrCode.size') }}</label>
-              <div class="choice-group">
+            <div>
+              <label :class="ui.label">{{ t('qrCode.size') }}</label>
+              <div :class="ui.choices">
                 <button
                   v-for="px in SIZES"
                   :key="px"
                   type="button"
-                  class="btn-ghost btn-sm"
-                  :class="{ 'is-active': size === px }"
+                  :class="cn(ui.btnGhostSm, size === px && ui.btnActive)"
                   @click="size = px"
                 >
                   {{ px }}
                 </button>
               </div>
-              <p class="hint">{{ t('qrCode.sizeHint') }}</p>
+              <p :class="ui.hint">{{ t('qrCode.sizeHint') }}</p>
             </div>
-            <div class="field field-full">
-              <label>{{ t('qrCode.margin') }}</label>
-              <div class="choice-group">
+            <div :class="ui.fieldFull">
+              <label :class="ui.label">{{ t('qrCode.margin') }}</label>
+              <div :class="ui.choices">
                 <button
                   v-for="m in MARGINS"
                   :key="m"
                   type="button"
-                  class="btn-ghost btn-sm"
-                  :class="{ 'is-active': margin === m }"
+                  :class="cn(ui.btnGhostSm, margin === m && ui.btnActive)"
                   @click="margin = m"
                 >
                   {{ m }}
                 </button>
               </div>
-              <p class="hint">{{ t('qrCode.marginHint') }}</p>
+              <p :class="ui.hint">{{ t('qrCode.marginHint') }}</p>
             </div>
           </div>
-          <div class="row" style="margin-top: 16px">
-            <button class="btn-ghost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
+          <div :class="[ui.row, 'mt-4']">
+            <button :class="ui.btnGhost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
           </div>
         </div>
       </section>
 
-      <section class="panel reveal">
-        <p class="panel-title">{{ t('common.result') }}</p>
-        <div class="card">
-          <div class="qr-frame">
-            <img v-if="dataUrl" :src="dataUrl" :alt="t('tools.qrCode.title')" width="240" height="240" />
-            <p v-else class="meta">{{ errorMsg || t('qrCode.empty') }}</p>
+      <section class="reveal">
+        <p :class="ui.panelTitle">{{ t('common.result') }}</p>
+        <div :class="ui.card">
+          <div class="flex min-h-72 items-center justify-center rounded-md border border-line bg-paper p-6">
+            <img
+              v-if="dataUrl"
+              class="block size-60 border border-line bg-surface [image-rendering:pixelated]"
+              :src="dataUrl"
+              :alt="t('tools.qrCode.title')"
+              width="240"
+              height="240"
+            />
+            <p v-else :class="ui.meta">{{ errorMsg || t('qrCode.empty') }}</p>
           </div>
-          <p class="meta" style="margin-top: 14px">{{ t('qrCode.chars', { n: text.trim().length }) }}</p>
-          <div class="error-box" :style="{ display: errorMsg ? 'block' : 'none' }">{{ errorMsg }}</div>
-          <div class="row" style="margin-top: 16px">
-            <button class="btn-primary" type="button" :disabled="!dataUrl" @click="downloadPng">
+          <p :class="[ui.meta, 'mt-3.5']">{{ t('qrCode.chars', { n: text.trim().length }) }}</p>
+          <div v-if="errorMsg" :class="ui.error">{{ errorMsg }}</div>
+          <div :class="[ui.row, 'mt-4']">
+            <button :class="ui.btnPrimary" type="button" :disabled="!dataUrl" @click="downloadPng">
               {{ t('qrCode.downloadPng') }}
             </button>
-            <button class="btn-ghost" type="button" :disabled="!dataUrl" @click="downloadSvg">
+            <button :class="ui.btnGhost" type="button" :disabled="!dataUrl" @click="downloadSvg">
               {{ t('qrCode.downloadSvg') }}
             </button>
-            <button class="btn-ghost" type="button" :disabled="!dataUrl" @click="copyPng">
+            <button :class="ui.btnGhost" type="button" :disabled="!dataUrl" @click="copyPng">
               {{ t('qrCode.copyImage') }}
             </button>
           </div>
@@ -182,7 +187,8 @@ async function copyPng() {
     </div>
 
     <template #extras>
-      <div class="toast" :class="{ show: toastVisible }">{{ toastMsg }}</div>
+      <div v-show="toastVisible" :class="ui.toast">{{ toastMsg }}</div>
     </template>
   </ToolLayout>
 </template>
+

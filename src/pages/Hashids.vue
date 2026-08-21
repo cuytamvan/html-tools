@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { copyText } from '@/lib/escape';
 import { DEFAULT_ALPHABET, Hashids, type HashidsNumber } from '@/lib/hashids';
+import { ui } from '@/lib/ui';
 
 const { t } = useI18n();
 const salt = ref('');
@@ -125,13 +126,13 @@ async function copyJson() {
 
 <template>
   <ToolLayout :title="t('tools.hashids.title')" :description="t('hashids.lead')">
-    <div class="split-grid">
-      <section class="panel split-span-2 reveal">
+    <div :class="ui.split">
+      <section class="reveal col-span-full">
         <details class="collapse">
           <summary>{{ t('common.settings') }}</summary>
-          <div class="form-grid cols-2">
-            <div class="field">
-              <label for="salt">Salt</label>
+          <div :class="ui.form">
+            <div>
+              <label :class="ui.label" for="salt">Salt</label>
               <input
                 id="salt"
                 v-model="salt"
@@ -139,87 +140,80 @@ async function copyJson() {
                 :placeholder="t('hashids.emptyPlaceholder')"
                 autocomplete="off"
                 spellcheck="false"
+                :class="ui.input"
               />
-              <p class="hint">{{ t('hashids.saltHint') }}</p>
+              <p :class="ui.hint">{{ t('hashids.saltHint') }}</p>
             </div>
-            <div class="field">
-              <label for="minLength">{{ t('hashids.minLength') }}</label>
-              <input id="minLength" v-model="minLength" type="number" min="0" step="1" />
-              <p class="hint">{{ t('hashids.minLengthHint') }}</p>
+            <div>
+              <label :class="ui.label" for="minLength">{{ t('hashids.minLength') }}</label>
+              <input id="minLength" v-model="minLength" type="number" min="0" step="1" :class="ui.input" />
+              <p :class="ui.hint">{{ t('hashids.minLengthHint') }}</p>
             </div>
-            <div class="field field-full">
-              <label for="alphabet">Alphabet</label>
-              <input
-                id="alphabet"
-                v-model="alphabet"
-                type="text"
-                autocomplete="off"
-                spellcheck="false"
-              />
-              <p class="hint">{{ t('hashids.alphabetHint') }}</p>
+            <div :class="ui.fieldFull">
+              <label :class="ui.label" for="alphabet">Alphabet</label>
+              <input id="alphabet" v-model="alphabet" type="text" autocomplete="off" spellcheck="false" :class="ui.input" />
+              <p :class="ui.hint">{{ t('hashids.alphabetHint') }}</p>
             </div>
           </div>
         </details>
       </section>
 
-      <section class="panel card reveal">
-        <p class="panel-title">Encode</p>
-        <div class="form-grid">
-          <div class="field field-full">
-            <label for="numbersInput">{{ t('hashids.numbers') }}</label>
-            <input
-              id="numbersInput"
-              v-model="numbersInput"
-              type="text"
-              placeholder="1, 2, 3"
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <p class="hint">{{ t('hashids.numbersHint') }}</p>
+      <section :class="[ui.card, 'reveal']">
+        <p :class="ui.panelTitle">Encode</p>
+        <div>
+          <label :class="ui.label" for="numbersInput">{{ t('hashids.numbers') }}</label>
+          <input
+            id="numbersInput"
+            v-model="numbersInput"
+            type="text"
+            placeholder="1, 2, 3"
+            autocomplete="off"
+            spellcheck="false"
+            :class="ui.input"
+          />
+          <p :class="ui.hint">{{ t('hashids.numbersHint') }}</p>
+        </div>
+        <div :class="[ui.resultList, 'mt-4']">
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">Hash</span>
+            <span :class="[ui.resultValue, 'break-all']">{{ encodeState.display }}</span>
           </div>
         </div>
-        <div class="result-list" style="margin-top: 16px">
-          <div class="result-row">
-            <span class="label">Hash</span>
-            <span class="value mono">{{ encodeState.display }}</span>
-          </div>
+        <div :class="[ui.row, 'mt-3.5']">
+          <button :class="ui.btnGhostSm" type="button" @click="copyHash">{{ t('hashids.copyHash') }}</button>
         </div>
-        <div class="row" style="margin-top: 14px">
-          <button class="btn-ghost btn-sm" type="button" @click="copyHash">{{ t('hashids.copyHash') }}</button>
-        </div>
-        <p class="result-note">{{ encodeCopyNote || encodeState.note }}</p>
+        <p :class="ui.note">{{ encodeCopyNote || encodeState.note }}</p>
       </section>
 
-      <section class="panel card reveal">
-        <p class="panel-title">Decode</p>
-        <div class="form-grid">
-          <div class="field field-full">
-            <label for="hashInput">Hash</label>
-            <input
-              id="hashInput"
-              v-model="hashInput"
-              type="text"
-              placeholder="o2fXhV"
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <p class="hint">{{ t('hashids.hashHint') }}</p>
+      <section :class="[ui.card, 'reveal']">
+        <p :class="ui.panelTitle">Decode</p>
+        <div>
+          <label :class="ui.label" for="hashInput">Hash</label>
+          <input
+            id="hashInput"
+            v-model="hashInput"
+            type="text"
+            placeholder="o2fXhV"
+            autocomplete="off"
+            spellcheck="false"
+            :class="ui.input"
+          />
+          <p :class="ui.hint">{{ t('hashids.hashHint') }}</p>
+        </div>
+        <div :class="[ui.resultList, 'mt-4']">
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">{{ t('hashids.numbers') }}</span>
+            <span :class="[ui.resultValue, 'break-all']">{{ decodeState.numbers }}</span>
+          </div>
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">JSON</span>
+            <span :class="[ui.resultValue, 'break-all']">{{ decodeState.jsonDisplay }}</span>
           </div>
         </div>
-        <div class="result-list" style="margin-top: 16px">
-          <div class="result-row">
-            <span class="label">{{ t('hashids.numbers') }}</span>
-            <span class="value mono">{{ decodeState.numbers }}</span>
-          </div>
-          <div class="result-row">
-            <span class="label">JSON</span>
-            <span class="value mono">{{ decodeState.jsonDisplay }}</span>
-          </div>
+        <div :class="[ui.row, 'mt-3.5']">
+          <button :class="ui.btnGhostSm" type="button" @click="copyJson">{{ t('csvJson.copyJson') }}</button>
         </div>
-        <div class="row" style="margin-top: 14px">
-          <button class="btn-ghost btn-sm" type="button" @click="copyJson">{{ t('csvJson.copyJson') }}</button>
-        </div>
-        <p class="result-note">{{ decodeCopyNote || decodeState.note }}</p>
+        <p :class="ui.note">{{ decodeCopyNote || decodeState.note }}</p>
       </section>
     </div>
   </ToolLayout>

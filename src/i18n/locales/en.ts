@@ -44,6 +44,8 @@ export default {
     howToInstall: 'How to install',
     toolsTitle: 'Tools',
     toolsLead: '{n} pages, one job each. Open, use, close.',
+    toolsSearch: 'Search tools',
+    toolsEmpty: 'No tools match that search.',
     howtoTitle: 'How to use',
     howtoLead: 'From install to running. Use the Docker image, clone the repo, or install it as an app.',
     dockerTitle: '01 docker',

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { useToast } from '@/composables/useToast';
 import { copyText, pickFile } from '@/lib/escape';
 import { forgetFileHandle, persistFileHandle, readFileHandle } from '@/lib/fileHandles';
 import { highlight } from '@/lib/highlight';
+import { cn, ui } from '@/lib/ui';
 
 type BoilerplateItem = {
   id?: string;
@@ -383,57 +384,55 @@ onUnmounted(() => {
   <ToolLayout :title="t('tools.boilerplate.title')">
     <template #lead>
       {{ t('boilerplate.leadBefore') }}
-      <span class="mono">boilerplates.json</span>
+      <span class="font-mono">boilerplates.json</span>
       {{ t('boilerplate.leadAfter') }}
     </template>
 
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('boilerplate.source') }}</p>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('boilerplate.source') }}</p>
       <div
-        class="card"
-        :class="{ 'is-drop': isDrop }"
+        :class="[ui.card, isDrop && 'outline outline-dashed outline-ink outline-offset-2']"
         @dragover="onDragOver"
         @dragleave="isDrop = false"
         @drop="onDrop"
       >
-        <p class="meta">
+        <p :class="ui.meta">
           <template v-if="!sourceLabel">{{ t('boilerplate.none') }}</template>
-          <i18n-t v-else-if="sourcePending" keypath="boilerplate.usingPending" tag="span">
+          <i18n-t scope="global" v-else-if="sourcePending" keypath="boilerplate.usingPending" tag="span">
             <template #name><b>{{ sourceLabel }}</b></template>
           </i18n-t>
-          <i18n-t v-else-if="sourceWatching" keypath="boilerplate.usingWatch" tag="span">
+          <i18n-t scope="global" v-else-if="sourceWatching" keypath="boilerplate.usingWatch" tag="span">
             <template #name><b>{{ sourceLabel }}</b></template>
           </i18n-t>
-          <i18n-t v-else keypath="boilerplate.usingStatic" tag="span">
+          <i18n-t scope="global" v-else keypath="boilerplate.usingStatic" tag="span">
             <template #name><b>{{ sourceLabel }}</b></template>
           </i18n-t>
         </p>
-        <div class="row" style="margin-top: 14px">
-          <button class="btn-primary" type="button" @click="openFilePicker">{{ t('boilerplate.chooseFolder') }}</button>
-          <a class="btn-ghost" href="/data/boilerplates.example.json" download="boilerplates.json">{{ t('boilerplate.downloadSample') }}</a>
-          <button class="btn-ghost" type="button" :hidden="clearSourceHidden" @click="onClearSource">{{ t('boilerplate.clearSource') }}</button>
+        <div :class="[ui.row, 'mt-3.5']">
+          <button :class="ui.btnPrimary" type="button" @click="openFilePicker">{{ t('boilerplate.chooseFolder') }}</button>
+          <a :class="ui.btnGhost" href="/data/boilerplates.example.json" download="boilerplates.json">{{ t('boilerplate.downloadSample') }}</a>
+          <button :class="ui.btnGhost" type="button" :hidden="clearSourceHidden" @click="onClearSource">{{ t('boilerplate.clearSource') }}</button>
         </div>
-        <input ref="fileSource" type="file" class="file-native" accept=".json" @change="onFileChange" />
-        <p class="result-note">
-          <i18n-t keypath="boilerplate.note" tag="span">
-            <template #file><span class="mono">boilerplates.json</span></template>
-            <template #format><span class="mono">{ "commands": [], "files": [] }</span></template>
+        <input ref="fileSource" type="file" :class="ui.srFile" accept=".json" @change="onFileChange" />
+        <p :class="ui.note">
+          <i18n-t scope="global" keypath="boilerplate.note" tag="span">
+            <template #file><span class="font-mono">boilerplates.json</span></template>
+            <template #format><span class="font-mono">{ "commands": [], "files": [] }</span></template>
           </i18n-t>
         </p>
       </div>
     </section>
 
-    <div :hidden="catalogHidden">
-      <section class="panel reveal">
-        <p class="panel-title">{{ t('boilerplate.files') }}</p>
-        <div class="card">
-          <div class="choice-group">
+    <div v-show="!catalogHidden">
+      <section :class="[ui.panel, 'reveal']">
+        <p :class="ui.panelTitle">{{ t('boilerplate.files') }}</p>
+        <div :class="ui.card">
+          <div :class="ui.choices">
             <button
               v-for="(item, i) in fileItems"
               :key="'files-' + itemKey(item) + '-' + i"
               type="button"
-              class="btn-ghost btn-sm"
-              :class="{ 'is-active': selectedKind === 'files' && selectedKey === itemKey(item) }"
+              :class="cn(ui.btnGhostSm, selectedKind === 'files' && selectedKey === itemKey(item) && ui.btnActive)"
               @click="showItem(item, 'files')"
             >
               {{ item.label || item.id }}
@@ -442,16 +441,15 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <section class="panel reveal">
-        <p class="panel-title">{{ t('boilerplate.commands') }}</p>
-        <div class="card">
-          <div class="choice-group">
+      <section :class="[ui.panel, 'reveal']">
+        <p :class="ui.panelTitle">{{ t('boilerplate.commands') }}</p>
+        <div :class="ui.card">
+          <div :class="ui.choices">
             <button
               v-for="(item, i) in commandItems"
               :key="'commands-' + itemKey(item) + '-' + i"
               type="button"
-              class="btn-ghost btn-sm"
-              :class="{ 'is-active': selectedKind === 'commands' && selectedKey === itemKey(item) }"
+              :class="cn(ui.btnGhostSm, selectedKind === 'commands' && selectedKey === itemKey(item) && ui.btnActive)"
               @click="showItem(item, 'commands')"
             >
               {{ item.label || item.id }}
@@ -460,24 +458,24 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <section class="panel reveal" :style="{ display: previewVisible ? 'block' : 'none' }">
-        <div class="code-panel-head">
+      <section v-show="previewVisible" :class="[ui.panel, 'reveal']">
+        <div class="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2>{{ itemTitle }}</h2>
-            <p class="meta">{{ itemDescription }}</p>
+            <h2 :class="[ui.cardTitle, 'mb-1.5']">{{ itemTitle }}</h2>
+            <p :class="ui.meta">{{ itemDescription }}</p>
           </div>
         </div>
-        <div class="code-wrap">
-          <div class="code-toolbar">
-            <span class="filename">{{ itemFilename }}</span>
-            <button class="btn-ghost btn-sm" type="button" @click="copyCode">{{ t('common.copy') }}</button>
+        <div :class="ui.codeWrap">
+          <div :class="ui.codeToolbar">
+            <span :class="ui.filename">{{ itemFilename }}</span>
+            <button :class="ui.btnGhostSm" type="button" @click="copyCode">{{ t('common.copy') }}</button>
           </div>
-          <pre class="code-block" v-html="codeHtml"></pre>
+          <pre :class="ui.codeBlock" v-html="codeHtml"></pre>
         </div>
       </section>
     </div>
 
-    <div class="empty-state" :style="{ display: emptyVisible ? 'block' : 'none' }">{{ t(emptyKey) }}</div>
+    <div v-show="emptyVisible" :class="ui.empty">{{ t(emptyKey) }}</div>
   </ToolLayout>
-  <div class="toast" :class="{ show: toastVisible }">{{ toastMsg }}</div>
+  <div v-show="toastVisible" :class="ui.toast">{{ toastMsg }}</div>
 </template>

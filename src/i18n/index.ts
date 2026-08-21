@@ -1,4 +1,4 @@
-import { createI18n } from 'vue-i18n';
+import { createI18n, useI18n as useVueI18n } from 'vue-i18n';
 
 import en from './locales/en';
 import id from './locales/id';
@@ -33,6 +33,10 @@ export const i18n = createI18n({
   fallbackLocale: DEFAULT_LOCALE,
   messages: { en, id },
 });
+
+export function useI18n() {
+  return useVueI18n({ useScope: 'global' });
+}
 
 export function currentLocale(): LocaleCode {
   const value = i18n.global.locale.value;

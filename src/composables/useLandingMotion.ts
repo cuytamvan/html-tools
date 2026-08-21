@@ -15,13 +15,13 @@ export function useLandingMotion(): void {
     const copy = document.querySelector('.hero-copy');
     const cta = document.querySelector('.hero-cta');
     const windowEl = document.querySelector('.os-window');
-    const tools = document.querySelectorAll('.tool-item');
+    const toolsGrid = document.querySelector('.tool-grid');
     const notes = document.querySelectorAll('.note-card, .howto-card');
     const sectionHeads = document.querySelectorAll('.landing-section-head');
     const ease = 'power3.out';
 
     gsap.set([bar, lines, copy, cta, windowEl], { opacity: 0, y: 12 });
-    gsap.set(tools, { opacity: 0, y: 12 });
+    gsap.set(toolsGrid, { opacity: 0, y: 12 });
     gsap.set(notes, { opacity: 0, y: 12 });
     gsap.set(sectionHeads, { opacity: 0, y: 12 });
 
@@ -44,10 +44,9 @@ export function useLandingMotion(): void {
       });
     }
 
-    gsap.to(tools, {
+    gsap.to(toolsGrid, {
       opacity: 1,
       y: 0,
-      stagger: 0.08,
       duration: 0.7,
       ease,
       scrollTrigger: {

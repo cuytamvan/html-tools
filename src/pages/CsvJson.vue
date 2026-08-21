@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { copyText, downloadFile, pickFile } from '@/lib/escape';
 import { useToast } from '@/composables/useToast';
+import { cn, ui } from '@/lib/ui';
 
 const SAMPLE_ROWS = [
   { nama: 'Budi Santoso', umur: 28, kota: 'Jakarta', aktif: true },
@@ -295,75 +296,75 @@ loadSample();
 
 <template>
   <ToolLayout :title="t('tools.csvJson.title')" :description="t('csvJson.lead')">
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('common.settings') }}</p>
-      <div class="card">
-        <div class="form-grid cols-2">
-          <div class="field">
-            <label>{{ t('csvJson.delimiter') }}</label>
-            <div class="choice-group">
-              <button type="button" class="btn-ghost btn-sm" :class="{ 'is-active': delim === ',' }" @click="delim = ','">
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('common.settings') }}</p>
+      <div :class="ui.card">
+        <div :class="ui.form">
+          <div>
+            <label :class="ui.label">{{ t('csvJson.delimiter') }}</label>
+            <div :class="ui.choices">
+              <button type="button" :class="cn(ui.btnGhostSm, delim === ',' && ui.btnActive)" @click="delim = ','">
                 {{ t('csvJson.comma') }}
               </button>
-              <button type="button" class="btn-ghost btn-sm" :class="{ 'is-active': delim === ';' }" @click="delim = ';'">
+              <button type="button" :class="cn(ui.btnGhostSm, delim === ';' && ui.btnActive)" @click="delim = ';'">
                 {{ t('csvJson.semicolon') }}
               </button>
-              <button type="button" class="btn-ghost btn-sm" :class="{ 'is-active': delim === '\t' }" @click="delim = '\t'">
+              <button type="button" :class="cn(ui.btnGhostSm, delim === '\t' && ui.btnActive)" @click="delim = '\t'">
                 {{ t('csvJson.tab') }}
               </button>
             </div>
           </div>
-          <div class="field">
-            <label>{{ t('csvJson.options') }}</label>
-            <div class="choice-group">
-              <button type="button" class="btn-ghost btn-sm" :class="{ 'is-active': hasHeader }" @click="hasHeader = !hasHeader">
+          <div>
+            <label :class="ui.label">{{ t('csvJson.options') }}</label>
+            <div :class="ui.choices">
+              <button type="button" :class="cn(ui.btnGhostSm, hasHeader && ui.btnActive)" @click="hasHeader = !hasHeader">
                 {{ t('csvJson.headerRow') }}
               </button>
-              <button type="button" class="btn-ghost btn-sm" :class="{ 'is-active': coerce }" @click="coerce = !coerce">
+              <button type="button" :class="cn(ui.btnGhostSm, coerce && ui.btnActive)" @click="coerce = !coerce">
                 {{ t('csvJson.guessTypes') }}
               </button>
             </div>
-            <p class="hint">{{ t('csvJson.guessHint') }}</p>
+            <p :class="ui.hint">{{ t('csvJson.guessHint') }}</p>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="split-grid">
-      <section class="panel card reveal">
-        <div class="row between" style="margin-bottom: 12px">
-          <p class="panel-title" style="margin: 0">CSV</p>
-          <button class="btn-ghost btn-sm" type="button" @click="fileCsv && pickFile(fileCsv)">{{ t('common.chooseFile') }}</button>
+    <div :class="ui.split">
+      <section :class="[ui.card, 'reveal']">
+        <div :class="[ui.rowBetween, 'mb-3']">
+          <p :class="[ui.panelTitle, 'mb-0']">CSV</p>
+          <button :class="ui.btnGhostSm" type="button" @click="fileCsv && pickFile(fileCsv)">{{ t('common.chooseFile') }}</button>
         </div>
-        <textarea v-model="csvText" class="json-pane" spellcheck="false" placeholder="nama,umur,kota"></textarea>
-        <input ref="fileCsv" type="file" class="file-native" accept=".csv,text/csv,text/plain" @change="readFile(($event.target as HTMLInputElement).files?.[0], 'csv')" />
+        <textarea v-model="csvText" :class="[ui.textarea, ui.jsonPane]" spellcheck="false" placeholder="nama,umur,kota"></textarea>
+        <input ref="fileCsv" type="file" :class="ui.srFile" accept=".csv,text/csv,text/plain" @change="readFile(($event.target as HTMLInputElement).files?.[0], 'csv')" />
       </section>
-      <section class="panel card reveal">
-        <div class="row between" style="margin-bottom: 12px">
-          <p class="panel-title" style="margin: 0">JSON</p>
-          <button class="btn-ghost btn-sm" type="button" @click="fileJson && pickFile(fileJson)">{{ t('common.chooseFile') }}</button>
+      <section :class="[ui.card, 'reveal']">
+        <div :class="[ui.rowBetween, 'mb-3']">
+          <p :class="[ui.panelTitle, 'mb-0']">JSON</p>
+          <button :class="ui.btnGhostSm" type="button" @click="fileJson && pickFile(fileJson)">{{ t('common.chooseFile') }}</button>
         </div>
-        <textarea v-model="jsonText" class="json-pane" spellcheck="false" placeholder='[{"nama":"Budi Santoso"}]'></textarea>
-        <input ref="fileJson" type="file" class="file-native" accept=".json,application/json" @change="readFile(($event.target as HTMLInputElement).files?.[0], 'json')" />
+        <textarea v-model="jsonText" :class="[ui.textarea, ui.jsonPane]" spellcheck="false" placeholder='[{"nama":"Budi Santoso"}]'></textarea>
+        <input ref="fileJson" type="file" :class="ui.srFile" accept=".json,application/json" @change="readFile(($event.target as HTMLInputElement).files?.[0], 'json')" />
       </section>
     </div>
 
-    <section class="panel reveal">
-      <div class="row">
-        <button class="btn-primary" type="button" @click="csvToJson">{{ t('csvJson.csvToJson') }}</button>
-        <button class="btn-primary" type="button" @click="jsonToCsv">{{ t('csvJson.jsonToCsv') }}</button>
-        <button class="btn-ghost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
-        <button class="btn-ghost" type="button" @click="prettyJson">{{ t('common.prettyJson') }}</button>
+    <section :class="[ui.panel, 'reveal']">
+      <div :class="ui.row">
+        <button :class="ui.btnPrimary" type="button" @click="csvToJson">{{ t('csvJson.csvToJson') }}</button>
+        <button :class="ui.btnPrimary" type="button" @click="jsonToCsv">{{ t('csvJson.jsonToCsv') }}</button>
+        <button :class="ui.btnGhost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
+        <button :class="ui.btnGhost" type="button" @click="prettyJson">{{ t('common.prettyJson') }}</button>
       </div>
-      <div class="row" style="margin-top: 12px">
-        <button class="btn-ghost btn-sm" type="button" @click="copy('csv')">{{ t('csvJson.copyCsv') }}</button>
-        <button class="btn-ghost btn-sm" type="button" @click="copy('json')">{{ t('csvJson.copyJson') }}</button>
-        <button class="btn-ghost btn-sm" type="button" @click="download('csv')">{{ t('csvJson.downloadCsv') }}</button>
-        <button class="btn-ghost btn-sm" type="button" @click="download('json')">{{ t('csvJson.downloadJson') }}</button>
+      <div :class="[ui.row, 'mt-3']">
+        <button :class="ui.btnGhostSm" type="button" @click="copy('csv')">{{ t('csvJson.copyCsv') }}</button>
+        <button :class="ui.btnGhostSm" type="button" @click="copy('json')">{{ t('csvJson.copyJson') }}</button>
+        <button :class="ui.btnGhostSm" type="button" @click="download('csv')">{{ t('csvJson.downloadCsv') }}</button>
+        <button :class="ui.btnGhostSm" type="button" @click="download('json')">{{ t('csvJson.downloadJson') }}</button>
       </div>
-      <div class="error-box" :style="{ display: errorMsg ? 'block' : 'none' }">{{ errorMsg }}</div>
-      <p class="meta" style="margin-top: 14px">{{ statusMeta }}</p>
+      <div v-if="errorMsg" :class="ui.error">{{ errorMsg }}</div>
+      <p :class="[ui.meta, 'mt-3.5']">{{ statusMeta }}</p>
     </section>
   </ToolLayout>
-  <div class="toast" :class="{ show: toastVisible }">{{ toastMsg }}</div>
+  <div v-show="toastVisible" :class="ui.toast">{{ toastMsg }}</div>
 </template>

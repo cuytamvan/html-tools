@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { useToast } from '@/composables/useToast';
 import { copyText, escapeHtml, escapeRegExp, isPlainObject } from '@/lib/escape';
+import { ui } from '@/lib/ui';
 
 type JsonObject = Record<string, unknown>;
 type FilterLevel = { keys: string[]; value: string; basePath: string[] };
@@ -479,41 +480,43 @@ if (restored) {
 
 <template>
   <ToolLayout :title="t('tools.jsonSearcher.title')" :description="t('jsonSearcher.lead')">
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('jsonSearcher.input') }}</p>
-      <div class="card">
-        <textarea
-          v-model="jsonInput"
-          :placeholder="t('jsonSearcher.placeholder')"
-        ></textarea>
-        <div class="row between">
-          <div class="row">
-            <button class="btn-primary" type="button" @click="handleLoad">{{ t('jsonSearcher.process') }}</button>
-            <button class="btn-ghost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('jsonSearcher.input') }}</p>
+      <div :class="ui.card">
+        <textarea v-model="jsonInput" :class="ui.textarea" :placeholder="t('jsonSearcher.placeholder')"></textarea>
+        <div :class="[ui.rowBetween, 'mt-4']">
+          <div :class="ui.row">
+            <button :class="ui.btnPrimary" type="button" @click="handleLoad">{{ t('jsonSearcher.process') }}</button>
+            <button :class="ui.btnGhost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
           </div>
-          <div class="row">
-            <span class="meta"><b>{{ dataset.length }}</b> {{ t('jsonSearcher.rowsStoredSuffix') }}</span>
-            <button class="btn-danger btn-sm" type="button" @click="requestClear">{{ t('jsonSearcher.clearAll') }}</button>
+          <div :class="ui.row">
+            <span :class="ui.meta"><b class="font-mono text-xs font-semibold text-ink">{{ dataset.length }}</b> {{ t('jsonSearcher.rowsStoredSuffix') }}</span>
+            <button :class="ui.btnDangerSm" type="button" @click="requestClear">{{ t('jsonSearcher.clearAll') }}</button>
           </div>
         </div>
-        <div class="error-box" :style="{ display: errorMsg ? 'block' : 'none' }">{{ errorMsg }}</div>
+        <div v-if="errorMsg" :class="ui.error">{{ errorMsg }}</div>
       </div>
     </section>
 
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('jsonSearcher.searchFilter') }}</p>
-      <div class="card">
-        <div class="row" style="margin-bottom: 10px">
-          <input v-model="searchQuery" type="text" class="search-input" :placeholder="t('jsonSearcher.searchPlaceholder')" />
-          <span class="count-badge">{{ t('jsonSearcher.rowsMatch', { matched: tableView.matched, total: tableView.total }) }}</span>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('jsonSearcher.searchFilter') }}</p>
+      <div :class="ui.card">
+        <div :class="[ui.row, 'mb-2.5']">
+          <input
+            v-model="searchQuery"
+            type="text"
+            :class="ui.search"
+            :placeholder="t('jsonSearcher.searchPlaceholder')"
+          />
+          <span :class="ui.badge">{{ t('jsonSearcher.rowsMatch', { matched: tableView.matched, total: tableView.total }) }}</span>
         </div>
-        <div class="row">
-          <span class="meta" style="margin-right: 2px">{{ t('jsonSearcher.searchIn') }}</span>
-          <div id="filterChain">
+        <div :class="ui.row">
+          <span :class="[ui.meta, 'mr-0.5']">{{ t('jsonSearcher.searchIn') }}</span>
+          <div class="flex flex-wrap items-center gap-1.5">
             <template v-for="(level, i) in filterLevels" :key="i">
-              <span v-if="i > 0" class="filter-arrow">›</span>
+              <span v-if="i > 0" class="text-xs text-muted">›</span>
               <select
-                class="filter-select"
+                :class="ui.select"
                 :value="level.value"
                 @change="onFilterChange(i, ($event.target as HTMLSelectElement).value)"
               >
@@ -526,75 +529,76 @@ if (restored) {
       </div>
     </section>
 
-    <div class="table-scroll reveal">
-      <table v-if="!tableView.empty">
+    <div :class="[ui.tableScroll, 'reveal']">
+      <table v-if="!tableView.empty" :class="ui.table">
         <thead>
           <tr>
-            <th>#</th>
-            <th v-for="col in tableView.columns" :key="col">{{ col }}</th>
+            <th :class="ui.th">#</th>
+            <th v-for="col in tableView.columns" :key="col" :class="ui.th">{{ col }}</th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-for="row in tableView.rows"
             :key="row.idx"
+            class="cursor-pointer hover:bg-paper"
             :title="t('jsonSearcher.clickRow')"
             @click="openJsonModal(row.idx)"
           >
-            <td class="idx-col">{{ row.idx + 1 }}</td>
+            <td :class="[ui.td, ui.tdIdx]">{{ row.idx + 1 }}</td>
             <td
               v-for="(cell, ci) in row.cells"
               :key="ci"
-              :class="cell.isObj ? 'cell-json' : 'cell-value'"
+              :class="[ui.td, cell.isObj ? ui.tdJson : ui.tdValue]"
               :title="cell.isObj ? undefined : cell.title"
               v-html="cell.html"
             ></td>
           </tr>
         </tbody>
       </table>
-      <div v-else class="empty-state">{{ tableView.emptyText }}</div>
+      <div v-else :class="ui.empty">{{ tableView.emptyText }}</div>
     </div>
 
     <template #extras>
-      <div class="modal-overlay" :class="{ show: showReplaceModal }">
-        <div class="modal-box">
-          <h3>{{ t('jsonSearcher.replaceTitle') }}</h3>
-          <i18n-t keypath="jsonSearcher.replaceBody" tag="p">
+      <div :class="[ui.overlay, showReplaceModal ? 'flex' : 'hidden']">
+        <div :class="ui.modal">
+          <h3 :class="ui.modalTitle">{{ t('jsonSearcher.replaceTitle') }}</h3>
+          <i18n-t scope="global" keypath="jsonSearcher.replaceBody" tag="p" :class="ui.modalCopy">
             <template #replace><b>{{ t('jsonSearcher.replace') }}</b></template>
             <template #merge><b>{{ t('jsonSearcher.merge') }}</b></template>
           </i18n-t>
-          <div class="modal-actions">
-            <button class="btn-ghost btn-sm" type="button" @click="cancelReplace">{{ t('common.cancel') }}</button>
-            <button class="btn-danger btn-sm" type="button" @click="confirmReplace">{{ t('jsonSearcher.replace') }}</button>
-            <button class="btn-primary btn-sm" type="button" @click="confirmMerge">{{ t('jsonSearcher.merge') }}</button>
+          <div :class="ui.modalActions">
+            <button :class="ui.btnGhostSm" type="button" @click="cancelReplace">{{ t('common.cancel') }}</button>
+            <button :class="ui.btnDangerSm" type="button" @click="confirmReplace">{{ t('jsonSearcher.replace') }}</button>
+            <button :class="ui.btnPrimarySm" type="button" @click="confirmMerge">{{ t('jsonSearcher.merge') }}</button>
           </div>
         </div>
       </div>
 
-      <div class="modal-overlay" :class="{ show: showClearModal }">
-        <div class="modal-box">
-          <h3>{{ t('jsonSearcher.clearTitle') }}</h3>
-          <p>{{ t('jsonSearcher.clearBody') }}</p>
-          <div class="modal-actions">
-            <button class="btn-ghost btn-sm" type="button" @click="cancelClear">{{ t('common.cancel') }}</button>
-            <button class="btn-danger btn-sm" type="button" @click="confirmClear">{{ t('jsonSearcher.clearConfirm') }}</button>
+      <div :class="[ui.overlay, showClearModal ? 'flex' : 'hidden']">
+        <div :class="ui.modal">
+          <h3 :class="ui.modalTitle">{{ t('jsonSearcher.clearTitle') }}</h3>
+          <p :class="ui.modalCopy">{{ t('jsonSearcher.clearBody') }}</p>
+          <div :class="ui.modalActions">
+            <button :class="ui.btnGhostSm" type="button" @click="cancelClear">{{ t('common.cancel') }}</button>
+            <button :class="ui.btnDangerSm" type="button" @click="confirmClear">{{ t('jsonSearcher.clearConfirm') }}</button>
           </div>
         </div>
       </div>
 
-      <div class="modal-overlay" :class="{ show: showJsonModal }" @click="onJsonOverlayClick">
-        <div class="modal-box modal-json">
-          <h3>{{ t('jsonSearcher.detailTitle') }}</h3>
-          <p>{{ jsonModalMeta }}</p>
-          <pre ref="jsonModalPre" class="modal-json-pre" v-html="jsonModalHtml"></pre>
-          <div class="modal-actions">
-            <button class="btn-ghost btn-sm" type="button" @click="copyJson">{{ t('common.copy') }}</button>
-            <button class="btn-primary btn-sm" type="button" @click="closeJsonModal">{{ t('common.close') }}</button>
+      <div :class="[ui.overlay, showJsonModal ? 'flex' : 'hidden']" @click="onJsonOverlayClick">
+        <div :class="ui.modalWide">
+          <h3 :class="ui.modalTitle">{{ t('jsonSearcher.detailTitle') }}</h3>
+          <p :class="ui.modalCopy">{{ jsonModalMeta }}</p>
+          <pre ref="jsonModalPre" :class="[ui.regexPreview, 'mb-4 max-h-[60vh]']" v-html="jsonModalHtml"></pre>
+          <div :class="ui.modalActions">
+            <button :class="ui.btnGhostSm" type="button" @click="copyJson">{{ t('common.copy') }}</button>
+            <button :class="ui.btnPrimarySm" type="button" @click="closeJsonModal">{{ t('common.close') }}</button>
           </div>
         </div>
       </div>
 
-      <div class="toast" :class="{ show: toastVisible }">{{ toastMsg }}</div>
+      <div v-show="toastVisible" :class="ui.toast">{{ toastMsg }}</div>
     </template>
   </ToolLayout>
 </template>

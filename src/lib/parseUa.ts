@@ -1,4 +1,5 @@
 import { escapeHtml } from '@/lib/escape';
+import { tagClass } from '@/lib/ui';
 
 export const SAMPLE_UA =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.122 Mobile Safari/537.36';
@@ -102,10 +103,10 @@ export function pair(name: string, version: string): string {
 }
 
 export function typeClass(type: string): string {
-  if (type === 'phone') return 'tag blue';
-  if (type === 'tablet') return 'tag green';
-  if (type === 'bot') return 'tag red';
-  return 'tag';
+  if (type === 'phone') return tagClass('blue', true);
+  if (type === 'tablet') return tagClass('green', true);
+  if (type === 'bot') return tagClass('red', true);
+  return tagClass('', true);
 }
 
 export function highlightUA(ua: string, info: UaInfo): string {

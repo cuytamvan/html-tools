@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n } from '@/i18n';
 
 import ToolLayout from '@/components/ToolLayout.vue';
+import { ui } from '@/lib/ui';
 
 const { t, locale } = useI18n();
 
@@ -50,52 +51,52 @@ const result = computed(() => {
 
 <template>
   <ToolLayout :title="t('tools.overtime.title')" :description="t('overtime.lead')">
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('common.input') }}</p>
-      <div class="card">
-        <div class="form-grid">
-          <div class="field">
-            <label for="salary">{{ t('overtime.salary') }}</label>
-            <input id="salary" v-model="salary" type="number" min="0" step="1000" placeholder="5000000" />
-            <p class="hint">{{ t('overtime.salaryHint') }}</p>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('common.input') }}</p>
+      <div :class="ui.card">
+        <div class="grid" :class="ui.formAuto">
+          <div>
+            <label :class="ui.label" for="salary">{{ t('overtime.salary') }}</label>
+            <input id="salary" v-model="salary" type="number" min="0" step="1000" placeholder="5000000" :class="ui.input" />
+            <p :class="ui.hint">{{ t('overtime.salaryHint') }}</p>
           </div>
-          <div class="field">
-            <label for="workDays">{{ t('overtime.workDays') }}</label>
-            <input id="workDays" v-model="workDays" type="number" min="1" step="1" />
-            <p class="hint">{{ t('overtime.workDaysHint') }}</p>
+          <div>
+            <label :class="ui.label" for="workDays">{{ t('overtime.workDays') }}</label>
+            <input id="workDays" v-model="workDays" type="number" min="1" step="1" :class="ui.input" />
+            <p :class="ui.hint">{{ t('overtime.workDaysHint') }}</p>
           </div>
-          <div class="field">
-            <label for="workHours">{{ t('overtime.workHours') }}</label>
-            <input id="workHours" v-model="workHours" type="number" min="0.5" step="0.5" />
-            <p class="hint">{{ t('overtime.workHoursHint') }}</p>
+          <div>
+            <label :class="ui.label" for="workHours">{{ t('overtime.workHours') }}</label>
+            <input id="workHours" v-model="workHours" type="number" min="0.5" step="0.5" :class="ui.input" />
+            <p :class="ui.hint">{{ t('overtime.workHoursHint') }}</p>
           </div>
-          <div class="field">
-            <label for="overtimeHours">{{ t('overtime.overtimeHours') }}</label>
-            <input id="overtimeHours" v-model="overtimeHours" type="number" min="0" step="0.5" placeholder="0" />
-            <p class="hint">{{ t('overtime.overtimeHoursHint') }}</p>
+          <div>
+            <label :class="ui.label" for="overtimeHours">{{ t('overtime.overtimeHours') }}</label>
+            <input id="overtimeHours" v-model="overtimeHours" type="number" min="0" step="0.5" placeholder="0" :class="ui.input" />
+            <p :class="ui.hint">{{ t('overtime.overtimeHoursHint') }}</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('common.result') }}</p>
-      <div class="card">
-        <div class="result-list">
-          <div class="result-row">
-            <span class="label">{{ t('overtime.hourly') }}</span>
-            <span class="value">{{ result.hourly }}</span>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('common.result') }}</p>
+      <div :class="ui.card">
+        <div :class="ui.resultList">
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">{{ t('overtime.hourly') }}</span>
+            <span :class="ui.resultValue">{{ result.hourly }}</span>
           </div>
-          <div class="result-row">
-            <span class="label">{{ t('overtime.overtimeTotal') }}</span>
-            <span class="value">{{ result.overtime }}</span>
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">{{ t('overtime.overtimeTotal') }}</span>
+            <span :class="ui.resultValue">{{ result.overtime }}</span>
           </div>
-          <div class="result-row total">
-            <span class="label">{{ t('overtime.salaryPlus') }}</span>
-            <span class="value">{{ result.total }}</span>
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">{{ t('overtime.salaryPlus') }}</span>
+            <span :class="[ui.resultValue, ui.resultTotal]">{{ result.total }}</span>
           </div>
         </div>
-        <p class="result-note">{{ result.note }}</p>
+        <p :class="ui.note">{{ result.note }}</p>
       </div>
     </section>
   </ToolLayout>

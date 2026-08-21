@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { escapeHtml } from '@/lib/escape';
+import { cn, ui } from '@/lib/ui';
 
 const { t } = useI18n();
 const MAX_MATCHES = 400;
@@ -130,107 +131,106 @@ const result = computed(() => {
 
 <template>
   <ToolLayout :title="t('tools.regexTester.title')" :description="t('regex.lead')">
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('regex.pattern') }}</p>
-      <div class="card">
-        <div class="field">
-          <label for="pattern">Regular expression</label>
-          <div class="pattern-wrap">
-            <span class="slash" aria-hidden="true">/</span>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('regex.pattern') }}</p>
+      <div :class="ui.card">
+        <div>
+          <label :class="ui.label" for="pattern">Regular expression</label>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-lg leading-none text-muted" aria-hidden="true">/</span>
             <input
               id="pattern"
               v-model="pattern"
               type="text"
-              class="input-mono"
+              :class="[ui.input, ui.inputMono, 'min-w-0 flex-1']"
               autocomplete="off"
               spellcheck="false"
               :placeholder="t('regex.patternPlaceholder')"
             />
-            <span class="slash" aria-hidden="true">/</span>
+            <span class="font-mono text-lg leading-none text-muted" aria-hidden="true">/</span>
           </div>
         </div>
-        <div class="field" style="margin-top: 16px">
-          <label>{{ t('regex.flags') }}</label>
-          <div class="choice-group">
+        <div class="mt-4">
+          <label :class="ui.label">{{ t('regex.flags') }}</label>
+          <div :class="ui.choices">
             <button
               v-for="flag in FLAGS"
               :key="flag"
               type="button"
-              class="btn-ghost btn-sm"
-              :class="{ 'is-active': activeFlags.includes(flag) }"
+              :class="cn(ui.btnGhostSm, activeFlags.includes(flag) && ui.btnActive)"
               :title="flag"
               @click="toggleFlag(flag)"
             >
               {{ flag }}
             </button>
           </div>
-          <p class="hint">{{ t('regex.flagsHint') }}</p>
+          <p :class="ui.hint">{{ t('regex.flagsHint') }}</p>
         </div>
-        <div class="error-box" :style="{ display: result.error ? 'block' : 'none' }">{{ result.error }}</div>
+        <div v-if="result.error" :class="ui.error">{{ result.error }}</div>
       </div>
     </section>
 
-    <div class="split-grid">
-      <section class="panel card reveal">
-        <p class="panel-title">{{ t('regex.testText') }}</p>
-        <textarea v-model="haystack" spellcheck="false"></textarea>
+    <div :class="ui.split">
+      <section :class="[ui.card, 'reveal']">
+        <p :class="ui.panelTitle">{{ t('regex.testText') }}</p>
+        <textarea v-model="haystack" spellcheck="false" :class="ui.textarea"></textarea>
       </section>
-      <section class="panel card reveal">
-        <p class="panel-title">{{ t('regex.preview') }}</p>
-        <pre class="regex-preview" :class="{ 'is-empty': result.previewEmpty }" v-html="result.preview"></pre>
+      <section :class="[ui.card, 'reveal']">
+        <p :class="ui.panelTitle">{{ t('regex.preview') }}</p>
+        <pre :class="[ui.regexPreview, result.previewEmpty && 'text-muted']" v-html="result.preview"></pre>
       </section>
     </div>
 
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('regex.matches') }}</p>
-      <div class="card">
-        <p class="meta">{{ result.meta }}</p>
-        <div class="table-scroll" style="margin-top: 12px">
-          <table v-if="result.rows.length">
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('regex.matches') }}</p>
+      <div :class="ui.card">
+        <p :class="ui.meta">{{ result.meta }}</p>
+        <div :class="[ui.tableScroll, 'mt-3']">
+          <table v-if="result.rows.length" :class="ui.table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>{{ t('regex.text') }}</th>
-                <th>{{ t('regex.index') }}</th>
-                <th>{{ t('regex.groups') }}</th>
+                <th :class="ui.th">#</th>
+                <th :class="ui.th">{{ t('regex.text') }}</th>
+                <th :class="ui.th">{{ t('regex.index') }}</th>
+                <th :class="ui.th">{{ t('regex.groups') }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(row, i) in result.rows" :key="i">
-                <td class="idx-col">{{ i + 1 }}</td>
-                <td class="cell-value">{{ row.text }}</td>
-                <td class="idx-col">{{ row.index }}</td>
-                <td class="cell-json">{{ row.groups }}</td>
+              <tr v-for="(row, i) in result.rows" :key="i" class="cursor-pointer hover:bg-paper">
+                <td :class="[ui.td, ui.tdIdx]">{{ i + 1 }}</td>
+                <td :class="[ui.td, ui.tdValue]">{{ row.text }}</td>
+                <td :class="[ui.td, ui.tdIdx]">{{ row.index }}</td>
+                <td :class="[ui.td, ui.tdJson]">{{ row.groups }}</td>
               </tr>
             </tbody>
           </table>
-          <div v-else class="empty-state" style="padding: 32px 8px">{{ result.empty }}</div>
+          <div v-else :class="[ui.empty, 'px-2 py-8']">{{ result.empty }}</div>
         </div>
       </div>
     </section>
 
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('regex.replace') }}</p>
-      <div class="card">
-        <div class="field">
-          <label for="replacement">{{ t('regex.replacement') }}</label>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('regex.replace') }}</p>
+      <div :class="ui.card">
+        <div>
+          <label :class="ui.label" for="replacement">{{ t('regex.replacement') }}</label>
           <input
             id="replacement"
             v-model="replacement"
             type="text"
-            class="input-mono"
+            :class="[ui.input, ui.inputMono]"
             autocomplete="off"
             spellcheck="false"
             placeholder="$& atau $1"
           />
-          <p class="hint">
-            <i18n-t keypath="regex.replaceHint" tag="span">
-              <template #all><span class="mono">$&amp;</span></template>
-              <template #group><span class="mono">$1</span></template>
+          <p :class="ui.hint">
+            <i18n-t scope="global" keypath="regex.replaceHint" tag="span">
+              <template #all><span class="font-mono">$&amp;</span></template>
+              <template #group><span class="font-mono">$1</span></template>
             </i18n-t>
           </p>
         </div>
-        <pre class="regex-preview" style="margin-top: 16px">{{ result.replaceOut }}</pre>
+        <pre :class="[ui.regexPreview, 'mt-4']">{{ result.replaceOut }}</pre>
       </div>
     </section>
   </ToolLayout>

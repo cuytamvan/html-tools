@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { useToast } from '@/composables/useToast';
 import { copyText } from '@/lib/escape';
 import { highlightUA, pair, parseUA, SAMPLE_UA, typeClass } from '@/lib/parseUa';
+import { ui } from '@/lib/ui';
 
 type UaBrand = { brand: string; version: string };
 type HighEntropyValues = {
@@ -119,76 +120,76 @@ onMounted(() => applyCurrent(true));
 
 <template>
   <ToolLayout :title="t('tools.userAgent.title')" :description="t('ua.lead')">
-    <section class="panel reveal">
-      <p class="panel-title">User-Agent</p>
-      <div class="card">
-        <textarea v-model="uaInput" spellcheck="false" placeholder="Mozilla/5.0 ..." @input="hideHints"></textarea>
-        <div class="row" style="margin-top: 14px">
-          <button class="btn-primary" type="button" @click="applyCurrent(false)">{{ t('ua.useThis') }}</button>
-          <button class="btn-ghost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
-          <button class="btn-ghost" type="button" @click="copyJson">{{ t('ua.copyJson') }}</button>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">User-Agent</p>
+      <div :class="ui.card">
+        <textarea v-model="uaInput" spellcheck="false" placeholder="Mozilla/5.0 ..." :class="ui.textarea" @input="hideHints"></textarea>
+        <div :class="[ui.row, 'mt-3.5']">
+          <button :class="ui.btnPrimary" type="button" @click="applyCurrent(false)">{{ t('ua.useThis') }}</button>
+          <button :class="ui.btnGhost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
+          <button :class="ui.btnGhost" type="button" @click="copyJson">{{ t('ua.copyJson') }}</button>
         </div>
-        <p class="hint" style="margin-top: 12px">
-          <i18n-t keypath="ua.hint" tag="span">
-            <template #header><span class="mono">User-Agent</span></template>
+        <p :class="[ui.hint, 'mt-3']">
+          <i18n-t scope="global" keypath="ua.hint" tag="span">
+            <template #header><span class="font-mono">User-Agent</span></template>
           </i18n-t>
         </p>
       </div>
     </section>
 
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('common.result') }}</p>
-      <div class="card">
-        <div class="row" style="margin-bottom: 16px">
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('common.result') }}</p>
+      <div :class="ui.card">
+        <div :class="[ui.row, 'mb-4']">
           <span :class="typeClass(info.device.type)">{{ deviceTypeLabel(info.device.type) }}</span>
         </div>
-        <div class="result-list">
-          <div class="result-row">
-            <span class="label">{{ t('ua.browser') }}</span>
-            <span class="value">{{ displayPair(info.browser.name, info.browser.version) }}</span>
+        <div :class="ui.resultList">
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">{{ t('ua.browser') }}</span>
+            <span :class="ui.resultValue">{{ displayPair(info.browser.name, info.browser.version) }}</span>
           </div>
-          <div class="result-row">
-            <span class="label">{{ t('ua.engine') }}</span>
-            <span class="value">{{ displayPair(info.engine.name, info.engine.version) }}</span>
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">{{ t('ua.engine') }}</span>
+            <span :class="ui.resultValue">{{ displayPair(info.engine.name, info.engine.version) }}</span>
           </div>
-          <div class="result-row">
-            <span class="label">{{ t('ua.os') }}</span>
-            <span class="value">{{ displayPair(info.os.name, info.os.version) }}</span>
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">{{ t('ua.os') }}</span>
+            <span :class="ui.resultValue">{{ displayPair(info.os.name, info.os.version) }}</span>
           </div>
-          <div class="result-row">
-            <span class="label">{{ t('ua.device') }}</span>
-            <span class="value">{{ deviceText }}</span>
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">{{ t('ua.device') }}</span>
+            <span :class="ui.resultValue">{{ deviceText }}</span>
           </div>
-          <div class="result-row">
-            <span class="label">{{ t('ua.type') }}</span>
-            <span class="value">{{ deviceTypeLabel(info.device.type) }}</span>
+          <div :class="ui.resultRow">
+            <span :class="ui.resultLabel">{{ t('ua.type') }}</span>
+            <span :class="ui.resultValue">{{ deviceTypeLabel(info.device.type) }}</span>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('ua.string') }}</p>
-      <div class="card">
-        <pre class="regex-preview" v-html="highlightHtml"></pre>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('ua.string') }}</p>
+      <div :class="ui.card">
+        <pre :class="ui.regexPreview" v-html="highlightHtml"></pre>
       </div>
     </section>
 
-    <section class="panel reveal" :hidden="!hintsVisible">
-      <p class="panel-title">{{ t('ua.hints') }}</p>
-      <div class="card">
-        <p class="meta">{{ t('ua.hintsMeta') }}</p>
-        <div class="result-list">
-          <div v-for="row in hintRows" :key="row.label" class="result-row">
-            <span class="label">{{ row.label }}</span>
-            <span class="value">{{ row.value }}</span>
+    <section v-show="hintsVisible" :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('ua.hints') }}</p>
+      <div :class="ui.card">
+        <p :class="ui.meta">{{ t('ua.hintsMeta') }}</p>
+        <div :class="ui.resultList">
+          <div v-for="row in hintRows" :key="row.label" :class="ui.resultRow">
+            <span :class="ui.resultLabel">{{ row.label }}</span>
+            <span :class="ui.resultValue">{{ row.value }}</span>
           </div>
         </div>
       </div>
     </section>
 
     <template #extras>
-      <div class="toast" :class="{ show: toastVisible }">{{ toastMsg }}</div>
+      <div v-show="toastVisible" :class="ui.toast">{{ toastMsg }}</div>
     </template>
   </ToolLayout>
 </template>

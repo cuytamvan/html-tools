@@ -7,7 +7,6 @@ import { Router } from './router';
 import { registerPwa } from './pwa';
 
 import './styles/global.css';
-import './styles/landing.css';
 
 applyDocumentLang();
 createApp(App).use(i18n).use(Router).mount('#app');

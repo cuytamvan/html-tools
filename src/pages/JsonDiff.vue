@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { isPlainObject } from '@/lib/escape';
+import { tagClass, ui } from '@/lib/ui';
 
 type DiffKind = 'add' | 'del' | 'chg';
 type DiffRow = { type: DiffKind; path: string; left: unknown; right: unknown };
@@ -110,9 +111,9 @@ function typeLabel(type: DiffKind) {
 }
 
 function typeClass(type: DiffKind) {
-  if (type === 'add') return 'tag green';
-  if (type === 'del') return 'tag red';
-  return 'tag';
+  if (type === 'add') return tagClass('green', true);
+  if (type === 'del') return tagClass('red', true);
+  return tagClass('', true);
 }
 
 function compare() {
@@ -178,52 +179,52 @@ onMounted(compare);
 
 <template>
   <ToolLayout :title="t('tools.jsonDiff.title')" :description="t('jsonDiff.lead')">
-    <div class="split-grid">
-      <section class="panel card reveal">
-        <p class="panel-title">{{ t('jsonDiff.jsonA') }}</p>
-        <textarea v-model="jsonA" spellcheck="false" class="json-pane"></textarea>
-        <p class="hint">{{ errA }}</p>
+    <div :class="ui.split">
+      <section :class="[ui.card, 'reveal']">
+        <p :class="ui.panelTitle">{{ t('jsonDiff.jsonA') }}</p>
+        <textarea v-model="jsonA" spellcheck="false" :class="[ui.textarea, ui.jsonPane]"></textarea>
+        <p :class="ui.hint">{{ errA }}</p>
       </section>
-      <section class="panel card reveal">
-        <p class="panel-title">{{ t('jsonDiff.jsonB') }}</p>
-        <textarea v-model="jsonB" spellcheck="false" class="json-pane"></textarea>
-        <p class="hint">{{ errB }}</p>
+      <section :class="[ui.card, 'reveal']">
+        <p :class="ui.panelTitle">{{ t('jsonDiff.jsonB') }}</p>
+        <textarea v-model="jsonB" spellcheck="false" :class="[ui.textarea, ui.jsonPane]"></textarea>
+        <p :class="ui.hint">{{ errB }}</p>
       </section>
     </div>
 
-    <section class="panel reveal" style="margin-top: 12px">
-      <div class="row">
-        <button class="btn-primary" type="button" @click="compare">{{ t('jsonDiff.compare') }}</button>
-        <button class="btn-ghost" type="button" @click="pretty">{{ t('common.pretty') }}</button>
-        <button class="btn-ghost" type="button" @click="swap">{{ t('jsonDiff.swap') }}</button>
-        <button class="btn-ghost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
+    <section :class="[ui.panel, 'reveal mt-3']">
+      <div :class="ui.row">
+        <button :class="ui.btnPrimary" type="button" @click="compare">{{ t('jsonDiff.compare') }}</button>
+        <button :class="ui.btnGhost" type="button" @click="pretty">{{ t('common.pretty') }}</button>
+        <button :class="ui.btnGhost" type="button" @click="swap">{{ t('jsonDiff.swap') }}</button>
+        <button :class="ui.btnGhost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
       </div>
     </section>
 
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('jsonDiff.differences') }}</p>
-      <div class="card">
-        <p class="meta">{{ diffMeta }}</p>
-        <div class="table-scroll" style="margin-top: 12px">
-          <table v-if="showTable">
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('jsonDiff.differences') }}</p>
+      <div :class="ui.card">
+        <p :class="ui.meta">{{ diffMeta }}</p>
+        <div :class="[ui.tableScroll, 'mt-3']">
+          <table v-if="showTable" :class="ui.table">
             <thead>
               <tr>
-                <th></th>
-                <th>{{ t('jsonDiff.path') }}</th>
-                <th>{{ t('jsonDiff.jsonA') }}</th>
-                <th>{{ t('jsonDiff.jsonB') }}</th>
+                <th :class="ui.th"></th>
+                <th :class="ui.th">{{ t('jsonDiff.path') }}</th>
+                <th :class="ui.th">{{ t('jsonDiff.jsonA') }}</th>
+                <th :class="ui.th">{{ t('jsonDiff.jsonB') }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(r, i) in rows" :key="i">
-                <td><span :class="typeClass(r.type)">{{ typeLabel(r.type) }}</span></td>
-                <td class="cell-json">{{ r.path }}</td>
-                <td class="cell-json">{{ shortJson(r.left) }}</td>
-                <td class="cell-json">{{ shortJson(r.right) }}</td>
+              <tr v-for="(r, i) in rows" :key="i" class="cursor-pointer hover:bg-paper">
+                <td :class="ui.td"><span :class="typeClass(r.type)">{{ typeLabel(r.type) }}</span></td>
+                <td :class="[ui.td, ui.tdJson]">{{ r.path }}</td>
+                <td :class="[ui.td, ui.tdJson]">{{ shortJson(r.left) }}</td>
+                <td :class="[ui.td, ui.tdJson]">{{ shortJson(r.right) }}</td>
               </tr>
             </tbody>
           </table>
-          <div v-else class="empty-state" style="padding: 32px 8px">{{ emptyText }}</div>
+          <div v-else :class="[ui.empty, 'px-2 py-8']">{{ emptyText }}</div>
         </div>
       </div>
     </section>

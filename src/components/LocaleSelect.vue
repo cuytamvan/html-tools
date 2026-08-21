@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-
-import { LOCALES, setLocale, type LocaleCode } from '@/i18n';
+import { LOCALES, setLocale, useI18n, type LocaleCode } from '@/i18n';
 
 const { t, locale } = useI18n();
 
@@ -41,27 +39,40 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="root" class="locale-dropdown" :class="{ 'is-open': open }">
+  <div ref="root" class="relative z-30">
     <button
       type="button"
-      class="locale-trigger"
+      class="inline-flex items-center gap-2 rounded-sm border border-line bg-surface px-2.5 py-1.5 font-sans text-xs font-medium tracking-tight text-ink focus:border-ink focus:outline-none"
       :aria-label="t('common.language')"
       aria-haspopup="listbox"
       :aria-expanded="open"
       @click="toggle"
     >
       <span>{{ current.label }}</span>
-      <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+      <svg
+        class="block text-muted transition-transform duration-200 ease-editorial"
+        :class="open && 'rotate-180'"
+        width="10"
+        height="6"
+        viewBox="0 0 10 6"
+        fill="none"
+        aria-hidden="true"
+      >
         <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="square" />
       </svg>
     </button>
-    <div v-if="open" class="locale-menu" role="listbox" :aria-label="t('common.language')">
+    <div
+      v-if="open"
+      class="absolute top-[calc(100%+6px)] right-0 w-max min-w-[calc(100%+24px)] rounded-md border border-line bg-surface p-1.5"
+      role="listbox"
+      :aria-label="t('common.language')"
+    >
       <button
         v-for="item in LOCALES"
         :key="item.code"
         type="button"
-        class="locale-option"
-        :class="{ 'is-active': item.code === locale }"
+        class="block w-full rounded-sm border border-transparent px-3 py-2 text-left text-ui font-medium tracking-tight text-ink hover:bg-paper"
+        :class="item.code === locale && 'border-ink bg-ink text-white hover:bg-ink hover:text-white'"
         role="option"
         :aria-selected="item.code === locale"
         @click="choose(item.code)"

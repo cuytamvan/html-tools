@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { useToast } from '@/composables/useToast';
 import { copyText } from '@/lib/escape';
 import { fileNameFor, generateTypes, highlightCode, SAMPLE, type TypeLang } from '@/lib/jsonToTypes';
+import { cn, ui } from '@/lib/ui';
 
 const LANGS: { id: TypeLang; label: string }[] = [
   { id: 'go', label: 'Go' },
@@ -81,24 +82,23 @@ async function copyCode() {
 
 <template>
   <ToolLayout :title="t('tools.jsonTypes.title')" :description="t('jsonTypes.lead')">
-    <section class="panel reveal">
-      <p class="panel-title">{{ t('common.settings') }}</p>
-      <div class="card">
-        <div class="form-grid cols-2">
-          <div class="field">
-            <label for="rootName">{{ t('jsonTypes.typeName') }}</label>
-            <input id="rootName" v-model="rootName" type="text" spellcheck="false" autocomplete="off" />
-            <p class="hint">{{ t('jsonTypes.typeNameHint') }}</p>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('common.settings') }}</p>
+      <div :class="ui.card">
+        <div :class="ui.form">
+          <div>
+            <label :class="ui.label" for="rootName">{{ t('jsonTypes.typeName') }}</label>
+            <input id="rootName" v-model="rootName" type="text" spellcheck="false" autocomplete="off" :class="ui.input" />
+            <p :class="ui.hint">{{ t('jsonTypes.typeNameHint') }}</p>
           </div>
-          <div class="field">
-            <label>{{ t('jsonTypes.language') }}</label>
-            <div class="choice-group">
+          <div>
+            <label :class="ui.label">{{ t('jsonTypes.language') }}</label>
+            <div :class="ui.choices">
               <button
                 v-for="item in LANGS"
                 :key="item.id"
                 type="button"
-                class="btn-ghost btn-sm"
-                :class="{ 'is-active': lang === item.id }"
+                :class="cn(ui.btnGhostSm, lang === item.id && ui.btnActive)"
                 @click="lang = item.id"
               >
                 {{ item.label }}
@@ -109,33 +109,33 @@ async function copyCode() {
       </div>
     </section>
 
-    <div class="split-grid">
-      <section class="panel card reveal">
-        <div class="row between" style="margin-bottom: 12px; margin-top: 0">
-          <p class="panel-title" style="margin: 0">JSON</p>
-          <div class="row">
-            <button class="btn-ghost btn-sm" type="button" @click="pretty">{{ t('common.pretty') }}</button>
-            <button class="btn-ghost btn-sm" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
+    <div :class="ui.split">
+      <section :class="[ui.card, 'reveal']">
+        <div :class="[ui.rowBetween, 'mb-3']">
+          <p :class="[ui.panelTitle, 'mb-0']">JSON</p>
+          <div :class="ui.row">
+            <button :class="ui.btnGhostSm" type="button" @click="pretty">{{ t('common.pretty') }}</button>
+            <button :class="ui.btnGhostSm" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
           </div>
         </div>
-        <textarea v-model="jsonInput" class="json-pane" spellcheck="false" placeholder="{ }"></textarea>
-        <p class="hint">{{ view.jsonErr }}</p>
+        <textarea v-model="jsonInput" :class="[ui.textarea, ui.jsonPane]" spellcheck="false" placeholder="{ }"></textarea>
+        <p :class="ui.hint">{{ view.jsonErr }}</p>
       </section>
-      <section class="panel card reveal">
-        <div class="code-wrap">
-          <div class="code-toolbar">
-            <span class="filename">{{ view.filename }}</span>
-            <button class="btn-ghost btn-sm" type="button" @click="copyCode">{{ t('common.copy') }}</button>
+      <section :class="[ui.card, 'reveal']">
+        <div :class="ui.codeWrap">
+          <div :class="ui.codeToolbar">
+            <span :class="ui.filename">{{ view.filename }}</span>
+            <button :class="ui.btnGhostSm" type="button" @click="copyCode">{{ t('common.copy') }}</button>
           </div>
-          <pre class="code-block" v-html="view.html"></pre>
+          <pre :class="ui.codeBlock" v-html="view.html"></pre>
         </div>
       </section>
     </div>
 
-    <p class="meta" style="margin-top: 16px">{{ view.status }}</p>
+    <p :class="[ui.meta, 'mt-4']">{{ view.status }}</p>
 
     <template #extras>
-      <div class="toast" :class="{ show: toastVisible }">{{ toastMsg }}</div>
+      <div v-show="toastVisible" :class="ui.toast">{{ toastMsg }}</div>
     </template>
   </ToolLayout>
 </template>

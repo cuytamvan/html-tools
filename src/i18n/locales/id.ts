@@ -44,6 +44,8 @@ export default {
     howToInstall: 'Cara install',
     toolsTitle: 'Tools',
     toolsLead: '{n} halaman, masing-masing satu pekerjaan. Buka, pakai, tutup.',
+    toolsSearch: 'Cari tools',
+    toolsEmpty: 'Tidak ada tools yang cocok.',
     howtoTitle: 'Cara pakai',
     howtoLead: 'Dari install sampai jalan. Pilih image Docker, clone repo, atau pasang sebagai aplikasi.',
     dockerTitle: '01 docker',
