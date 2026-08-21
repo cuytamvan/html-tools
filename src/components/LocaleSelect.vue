@@ -71,8 +71,12 @@ onUnmounted(() => {
         v-for="item in LOCALES"
         :key="item.code"
         type="button"
-        class="block w-full rounded-sm border border-transparent px-3 py-2 text-left text-ui font-medium tracking-tight text-ink hover:bg-paper"
-        :class="item.code === locale && 'border-ink bg-ink text-white hover:bg-ink hover:text-white'"
+        class="block w-full rounded-sm border border-transparent px-3 py-2 text-left text-ui font-medium tracking-tight"
+        :class="
+          item.code === locale
+            ? 'border-ink bg-ink text-white hover:bg-ink hover:text-white'
+            : 'text-ink hover:bg-paper'
+        "
         role="option"
         :aria-selected="item.code === locale"
         @click="choose(item.code)"
