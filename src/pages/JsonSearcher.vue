@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { useToast } from '@/composables/useToast';
 import { copyText, escapeHtml, escapeRegExp, isPlainObject } from '@/lib/escape';
@@ -9,6 +10,7 @@ type FilterLevel = { keys: string[]; value: string; basePath: string[] };
 type TableCell = { html: string; isObj: boolean; title: string };
 type TableRow = { idx: number; cells: TableCell[] };
 
+const { t } = useI18n();
 const STORAGE_KEY = 'json-searcher:dataset';
 const SAMPLE: JsonObject[] = [
   {
@@ -122,7 +124,7 @@ function saveCache() {
   } catch (e) {
     const err = e as { name?: string; code?: number };
     if (err.name === 'QuotaExceededError' || err.code === 22) {
-      showToast('Data terlalu besar untuk disimpan di browser.');
+      showToast(t('jsonSearcher.tooLarge'));
     }
   }
 }
@@ -181,7 +183,7 @@ function scanJsonValue(str: string, start: number): { value: unknown; end: numbe
       }
     }
   }
-  throw new SyntaxError('JSON tidak lengkap.');
+  throw new SyntaxError(t('jsonSearcher.incomplete'));
 }
 
 function parseConcatenated(raw: string): JsonObject[] | null {
@@ -251,31 +253,31 @@ function handleLoad() {
   clearError();
   const raw = jsonInput.value.trim();
   if (!raw) {
-    showError('Masukkan JSON terlebih dahulu.');
+    showError(t('jsonSearcher.enterJson'));
     return;
   }
   let parsed: unknown;
   try {
     parsed = parseJsonInput(raw);
   } catch (e) {
-    showError('JSON tidak valid: ' + (e as Error).message);
+    showError(t('common.jsonInvalid', { message: (e as Error).message }));
     return;
   }
 
   if (Array.isArray(parsed)) {
     if (parsed.length === 0) {
-      showError('Array kosong, tidak ada data untuk dimuat.');
+      showError(t('jsonSearcher.emptyArray'));
       return;
     }
     if (!parsed.every(isPlainObject)) {
-      showError('Array harus berisi Object di setiap elemennya.');
+      showError(t('jsonSearcher.arrayOfObjects'));
       return;
     }
     if (dataset.value.length === 0) {
       dataset.value = parsed;
       afterDataChange();
       jsonInput.value = '';
-      showToast('Data dimuat (' + parsed.length + ' baris).');
+      showToast(t('jsonSearcher.loadedRows', { n: parsed.length }));
     } else {
       pendingArray.value = parsed;
       showReplaceModal.value = true;
@@ -284,9 +286,9 @@ function handleLoad() {
     dataset.value.push(parsed);
     afterDataChange();
     jsonInput.value = '';
-    showToast('Object ditambahkan ke data.');
+    showToast(t('jsonSearcher.objectAdded'));
   } else {
-    showError('JSON harus berupa Object, Array of Object, Object dipisah koma, atau satu Object per baris.');
+    showError(t('jsonSearcher.badShape'));
   }
 }
 
@@ -302,7 +304,7 @@ function confirmReplace() {
   showReplaceModal.value = false;
   jsonInput.value = '';
   afterDataChange();
-  showToast('Data lama diganti dengan data baru.');
+  showToast(t('jsonSearcher.replaced'));
 }
 
 function confirmMerge() {
@@ -312,12 +314,12 @@ function confirmMerge() {
   showReplaceModal.value = false;
   jsonInput.value = '';
   afterDataChange();
-  showToast('Data baru digabung dengan data lama.');
+  showToast(t('jsonSearcher.merged'));
 }
 
 function requestClear() {
   if (dataset.value.length === 0) {
-    showToast('Tidak ada data untuk dihapus.');
+    showToast(t('jsonSearcher.nothingToClear'));
     return;
   }
   showClearModal.value = true;
@@ -331,7 +333,7 @@ function confirmClear() {
   dataset.value = [];
   showClearModal.value = false;
   afterDataChange();
-  showToast('Semua data dihapus.');
+  showToast(t('jsonSearcher.cleared'));
 }
 
 function loadSample() {
@@ -389,7 +391,7 @@ const tableView = computed(() => {
   if (dataset.value.length === 0) {
     return {
       empty: true,
-      emptyText: 'Belum ada data. Paste JSON di atas untuk mulai.',
+      emptyText: t('jsonSearcher.emptyStart'),
       matched: 0,
       total: 0,
       columns,
@@ -414,7 +416,7 @@ const tableView = computed(() => {
   });
   return {
     empty: rows.length === 0,
-    emptyText: rows.length === 0 ? 'Tidak ada baris yang cocok dengan pencarian.' : '',
+    emptyText: rows.length === 0 ? t('jsonSearcher.emptySearch') : '',
     matched: rows.length,
     total: dataset.value.length,
     columns,
@@ -432,7 +434,7 @@ function openJsonModal(idx: number) {
   const item = dataset.value[idx];
   if (!item) return;
   jsonModalRaw.value = JSON.stringify(item, null, 2);
-  jsonModalMeta.value = 'Baris #' + (idx + 1);
+  jsonModalMeta.value = t('jsonSearcher.rowMeta', { n: idx + 1 });
   showJsonModal.value = true;
 }
 
@@ -447,7 +449,7 @@ function onJsonOverlayClick(e: MouseEvent) {
 async function copyJson() {
   if (!jsonModalRaw.value) return;
   const ok = await copyText(jsonModalRaw.value);
-  showToast(ok ? 'JSON disalin ke clipboard.' : 'Gagal menyalin JSON.');
+  showToast(ok ? t('jsonSearcher.copiedClipboard') : t('common.copyFailJson'));
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -471,30 +473,27 @@ onUnmounted(() => {
 const restored = loadCache();
 afterDataChange();
 if (restored) {
-  showToast('Data sebelumnya dipulihkan (' + dataset.value.length + ' baris).');
+  showToast(t('jsonSearcher.restored', { n: dataset.value.length }));
 }
 </script>
 
 <template>
-  <ToolLayout
-    title="JSON Searcher"
-    description="Paste JSON (Object, Array of Object, beberapa Object dipisah koma, atau satu Object per baris), cari, filter, dan lihat hasilnya dalam tabel."
-  >
+  <ToolLayout :title="t('tools.jsonSearcher.title')" :description="t('jsonSearcher.lead')">
     <section class="panel reveal">
-      <p class="panel-title">Input JSON</p>
+      <p class="panel-title">{{ t('jsonSearcher.input') }}</p>
       <div class="card">
         <textarea
           v-model="jsonInput"
-          placeholder='Paste JSON di sini. Contoh: [{"nama":"Budi"}] atau {"nama":"Budi"} atau {"nama":"Budi"}{"nama":"Siti"}'
+          :placeholder="t('jsonSearcher.placeholder')"
         ></textarea>
         <div class="row between">
           <div class="row">
-            <button class="btn-primary" type="button" @click="handleLoad">Proses JSON</button>
-            <button class="btn-ghost" type="button" @click="loadSample">Muat Contoh</button>
+            <button class="btn-primary" type="button" @click="handleLoad">{{ t('jsonSearcher.process') }}</button>
+            <button class="btn-ghost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
           </div>
           <div class="row">
-            <span class="meta"><b>{{ dataset.length }}</b> baris data tersimpan</span>
-            <button class="btn-danger btn-sm" type="button" @click="requestClear">Hapus Semua Data</button>
+            <span class="meta"><b>{{ dataset.length }}</b> {{ t('jsonSearcher.rowsStoredSuffix') }}</span>
+            <button class="btn-danger btn-sm" type="button" @click="requestClear">{{ t('jsonSearcher.clearAll') }}</button>
           </div>
         </div>
         <div class="error-box" :style="{ display: errorMsg ? 'block' : 'none' }">{{ errorMsg }}</div>
@@ -502,14 +501,14 @@ if (restored) {
     </section>
 
     <section class="panel reveal">
-      <p class="panel-title">Pencarian &amp; Filter</p>
+      <p class="panel-title">{{ t('jsonSearcher.searchFilter') }}</p>
       <div class="card">
         <div class="row" style="margin-bottom: 10px">
-          <input v-model="searchQuery" type="text" class="search-input" placeholder="Ketik untuk mencari..." />
-          <span class="count-badge">{{ tableView.matched }} / {{ tableView.total }} baris cocok</span>
+          <input v-model="searchQuery" type="text" class="search-input" :placeholder="t('jsonSearcher.searchPlaceholder')" />
+          <span class="count-badge">{{ t('jsonSearcher.rowsMatch', { matched: tableView.matched, total: tableView.total }) }}</span>
         </div>
         <div class="row">
-          <span class="meta" style="margin-right: 2px">Cari dalam field:</span>
+          <span class="meta" style="margin-right: 2px">{{ t('jsonSearcher.searchIn') }}</span>
           <div id="filterChain">
             <template v-for="(level, i) in filterLevels" :key="i">
               <span v-if="i > 0" class="filter-arrow">›</span>
@@ -518,7 +517,7 @@ if (restored) {
                 :value="level.value"
                 @change="onFilterChange(i, ($event.target as HTMLSelectElement).value)"
               >
-                <option value="__STOP__">{{ i === 0 ? 'Semua Field' : '— cari semua di sini —' }}</option>
+                <option value="__STOP__">{{ i === 0 ? t('jsonSearcher.allFields') : t('jsonSearcher.searchHere') }}</option>
                 <option v-for="k in level.keys" :key="k" :value="k">{{ k }}</option>
               </select>
             </template>
@@ -539,7 +538,7 @@ if (restored) {
           <tr
             v-for="row in tableView.rows"
             :key="row.idx"
-            title="Klik untuk lihat JSON lengkap"
+            :title="t('jsonSearcher.clickRow')"
             @click="openJsonModal(row.idx)"
           >
             <td class="idx-col">{{ row.idx + 1 }}</td>
@@ -559,38 +558,38 @@ if (restored) {
     <template #extras>
       <div class="modal-overlay" :class="{ show: showReplaceModal }">
         <div class="modal-box">
-          <h3>Data sudah ada</h3>
-          <p>
-            Kamu sudah punya data yang tersimpan. Array JSON baru ini mau di-<b>replace</b> (ganti semua) atau
-            di-<b>merge</b> (gabung dengan data lama)?
-          </p>
+          <h3>{{ t('jsonSearcher.replaceTitle') }}</h3>
+          <i18n-t keypath="jsonSearcher.replaceBody" tag="p">
+            <template #replace><b>{{ t('jsonSearcher.replace') }}</b></template>
+            <template #merge><b>{{ t('jsonSearcher.merge') }}</b></template>
+          </i18n-t>
           <div class="modal-actions">
-            <button class="btn-ghost btn-sm" type="button" @click="cancelReplace">Batal</button>
-            <button class="btn-danger btn-sm" type="button" @click="confirmReplace">Replace</button>
-            <button class="btn-primary btn-sm" type="button" @click="confirmMerge">Merge</button>
+            <button class="btn-ghost btn-sm" type="button" @click="cancelReplace">{{ t('common.cancel') }}</button>
+            <button class="btn-danger btn-sm" type="button" @click="confirmReplace">{{ t('jsonSearcher.replace') }}</button>
+            <button class="btn-primary btn-sm" type="button" @click="confirmMerge">{{ t('jsonSearcher.merge') }}</button>
           </div>
         </div>
       </div>
 
       <div class="modal-overlay" :class="{ show: showClearModal }">
         <div class="modal-box">
-          <h3>Hapus semua data?</h3>
-          <p>Semua baris data yang tersimpan akan dihapus dan tidak bisa dikembalikan.</p>
+          <h3>{{ t('jsonSearcher.clearTitle') }}</h3>
+          <p>{{ t('jsonSearcher.clearBody') }}</p>
           <div class="modal-actions">
-            <button class="btn-ghost btn-sm" type="button" @click="cancelClear">Batal</button>
-            <button class="btn-danger btn-sm" type="button" @click="confirmClear">Hapus Semua</button>
+            <button class="btn-ghost btn-sm" type="button" @click="cancelClear">{{ t('common.cancel') }}</button>
+            <button class="btn-danger btn-sm" type="button" @click="confirmClear">{{ t('jsonSearcher.clearConfirm') }}</button>
           </div>
         </div>
       </div>
 
       <div class="modal-overlay" :class="{ show: showJsonModal }" @click="onJsonOverlayClick">
         <div class="modal-box modal-json">
-          <h3>Detail JSON</h3>
+          <h3>{{ t('jsonSearcher.detailTitle') }}</h3>
           <p>{{ jsonModalMeta }}</p>
           <pre ref="jsonModalPre" class="modal-json-pre" v-html="jsonModalHtml"></pre>
           <div class="modal-actions">
-            <button class="btn-ghost btn-sm" type="button" @click="copyJson">Salin</button>
-            <button class="btn-primary btn-sm" type="button" @click="closeJsonModal">Tutup</button>
+            <button class="btn-ghost btn-sm" type="button" @click="copyJson">{{ t('common.copy') }}</button>
+            <button class="btn-primary btn-sm" type="button" @click="closeJsonModal">{{ t('common.close') }}</button>
           </div>
         </div>
       </div>

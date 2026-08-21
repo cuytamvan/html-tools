@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { copyText } from '@/lib/escape';
 import { DEFAULT_ALPHABET, Hashids, type HashidsNumber } from '@/lib/hashids';
 
+const { t } = useI18n();
 const salt = ref('');
 const minLength = ref('6');
 const alphabet = ref(DEFAULT_ALPHABET);
@@ -38,7 +40,7 @@ function parseNumbers(raw: string): { empty?: boolean; error?: string; numbers: 
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
     if (!/^\+?\d+$/.test(part)) {
-      return { error: 'Angka harus bilangan bulat non-negatif, dipisah koma atau spasi.', numbers: [] };
+      return { error: t('hashids.badNumbers'), numbers: [] };
     }
     const asNumber = Number.parseInt(part, 10);
     if (Number.isSafeInteger(asNumber)) numbers.push(asNumber);
@@ -50,7 +52,7 @@ function parseNumbers(raw: string): { empty?: boolean; error?: string; numbers: 
 const encodeState = computed(() => {
   const raw = numbersInput.value.trim();
   if (!raw) {
-    return { hash: '', display: '—', note: 'Masukkan angka untuk encode.' };
+    return { hash: '', display: '—', note: t('hashids.enterNumbers') };
   }
 
   const parsed = parseNumbers(raw);
@@ -61,22 +63,22 @@ const encodeState = computed(() => {
   try {
     const hash = createHashids().encode(parsed.numbers);
     if (!hash) {
-      return { hash: '', display: '—', note: 'Tidak bisa encode angka tersebut.' };
+      return { hash: '', display: '—', note: t('hashids.cannotEncode') };
     }
     const note =
       parsed.numbers.length === 1
-        ? '1 angka berhasil di-encode.'
-        : parsed.numbers.length + ' angka berhasil di-encode.';
+        ? t('hashids.encodedOne')
+        : t('hashids.encodedMany', { n: parsed.numbers.length });
     return { hash, display: hash, note };
   } catch (err) {
-    return { hash: '', display: '—', note: (err as Error).message || 'Gagal encode angka.' };
+    return { hash: '', display: '—', note: (err as Error).message || t('hashids.encodeFail') };
   }
 });
 
 const decodeState = computed(() => {
   const hash = hashInput.value.trim();
   if (!hash) {
-    return { json: '', numbers: '—', jsonDisplay: '—', note: 'Masukkan hash untuk decode.' };
+    return { json: '', numbers: '—', jsonDisplay: '—', note: t('hashids.enterHash') };
   }
 
   try {
@@ -86,12 +88,12 @@ const decodeState = computed(() => {
         json: '',
         numbers: '—',
         jsonDisplay: '—',
-        note: 'Tidak bisa di-decode. Periksa hash, salt, panjang minimum, dan alphabet.',
+        note: t('hashids.cannotDecode'),
       };
     }
     const json = '[' + numbers.map(stringifyNumber).join(', ') + ']';
     const note =
-      numbers.length === 1 ? '1 angka berhasil di-decode.' : numbers.length + ' angka berhasil di-decode.';
+      numbers.length === 1 ? t('hashids.decodedOne') : t('hashids.decodedMany', { n: numbers.length });
     return {
       json,
       numbers: numbers.map(stringifyNumber).join(', '),
@@ -103,7 +105,7 @@ const decodeState = computed(() => {
       json: '',
       numbers: '—',
       jsonDisplay: '—',
-      note: (err as Error).message || 'Gagal decode hash.',
+      note: (err as Error).message || t('hashids.decodeFail'),
     };
   }
 });
@@ -111,25 +113,22 @@ const decodeState = computed(() => {
 async function copyHash() {
   if (!encodeState.value.hash) return;
   const ok = await copyText(encodeState.value.hash);
-  encodeCopyNote.value = ok ? 'Hash disalin ke clipboard.' : 'Gagal menyalin hash.';
+  encodeCopyNote.value = ok ? t('common.copiedHash') : t('common.copyFailHash');
 }
 
 async function copyJson() {
   if (!decodeState.value.json) return;
   const ok = await copyText(decodeState.value.json);
-  decodeCopyNote.value = ok ? 'JSON disalin ke clipboard.' : 'Gagal menyalin JSON.';
+  decodeCopyNote.value = ok ? t('jsonSearcher.copiedClipboard') : t('common.copyFailJson');
 }
 </script>
 
 <template>
-  <ToolLayout
-    title="Hashids"
-    description="Encode angka menjadi hash, atau decode hash menjadi angka. Salt, panjang minimum, dan alphabet harus sama di kedua sisi."
-  >
+  <ToolLayout :title="t('tools.hashids.title')" :description="t('hashids.lead')">
     <div class="split-grid">
       <section class="panel split-span-2 reveal">
         <details class="collapse">
-          <summary>Pengaturan</summary>
+          <summary>{{ t('common.settings') }}</summary>
           <div class="form-grid cols-2">
             <div class="field">
               <label for="salt">Salt</label>
@@ -137,16 +136,16 @@ async function copyJson() {
                 id="salt"
                 v-model="salt"
                 type="text"
-                placeholder="(kosong)"
+                :placeholder="t('hashids.emptyPlaceholder')"
                 autocomplete="off"
                 spellcheck="false"
               />
-              <p class="hint">Harus sama saat encode dan decode</p>
+              <p class="hint">{{ t('hashids.saltHint') }}</p>
             </div>
             <div class="field">
-              <label for="minLength">Panjang minimum</label>
+              <label for="minLength">{{ t('hashids.minLength') }}</label>
               <input id="minLength" v-model="minLength" type="number" min="0" step="1" />
-              <p class="hint">minLength hash hasil encode</p>
+              <p class="hint">{{ t('hashids.minLengthHint') }}</p>
             </div>
             <div class="field field-full">
               <label for="alphabet">Alphabet</label>
@@ -157,7 +156,7 @@ async function copyJson() {
                 autocomplete="off"
                 spellcheck="false"
               />
-              <p class="hint">Minimal 16 karakter unik. Default: a-z A-Z 1-9 0</p>
+              <p class="hint">{{ t('hashids.alphabetHint') }}</p>
             </div>
           </div>
         </details>
@@ -167,7 +166,7 @@ async function copyJson() {
         <p class="panel-title">Encode</p>
         <div class="form-grid">
           <div class="field field-full">
-            <label for="numbersInput">Angka</label>
+            <label for="numbersInput">{{ t('hashids.numbers') }}</label>
             <input
               id="numbersInput"
               v-model="numbersInput"
@@ -176,7 +175,7 @@ async function copyJson() {
               autocomplete="off"
               spellcheck="false"
             />
-            <p class="hint">Satu atau beberapa angka, dipisah koma atau spasi</p>
+            <p class="hint">{{ t('hashids.numbersHint') }}</p>
           </div>
         </div>
         <div class="result-list" style="margin-top: 16px">
@@ -186,7 +185,7 @@ async function copyJson() {
           </div>
         </div>
         <div class="row" style="margin-top: 14px">
-          <button class="btn-ghost btn-sm" type="button" @click="copyHash">Salin hash</button>
+          <button class="btn-ghost btn-sm" type="button" @click="copyHash">{{ t('hashids.copyHash') }}</button>
         </div>
         <p class="result-note">{{ encodeCopyNote || encodeState.note }}</p>
       </section>
@@ -204,12 +203,12 @@ async function copyJson() {
               autocomplete="off"
               spellcheck="false"
             />
-            <p class="hint">String hasil encode Hashids</p>
+            <p class="hint">{{ t('hashids.hashHint') }}</p>
           </div>
         </div>
         <div class="result-list" style="margin-top: 16px">
           <div class="result-row">
-            <span class="label">Angka</span>
+            <span class="label">{{ t('hashids.numbers') }}</span>
             <span class="value mono">{{ decodeState.numbers }}</span>
           </div>
           <div class="result-row">
@@ -218,7 +217,7 @@ async function copyJson() {
           </div>
         </div>
         <div class="row" style="margin-top: 14px">
-          <button class="btn-ghost btn-sm" type="button" @click="copyJson">Salin JSON</button>
+          <button class="btn-ghost btn-sm" type="button" @click="copyJson">{{ t('csvJson.copyJson') }}</button>
         </div>
         <p class="result-note">{{ decodeCopyNote || decodeState.note }}</p>
       </section>

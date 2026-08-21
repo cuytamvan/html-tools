@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { isPlainObject } from '@/lib/escape';
 
@@ -24,22 +25,37 @@ const SAMPLE_B = {
   email: 'budi.santoso@kontak.id',
 };
 
+const { t } = useI18n();
+
 const jsonA = ref(JSON.stringify(SAMPLE_A, null, 2));
 const jsonB = ref(JSON.stringify(SAMPLE_B, null, 2));
 const errA = ref('');
 const errB = ref('');
-const diffMeta = ref('Isi kedua sisi, lalu bandingkan.');
 const rows = ref<DiffRow[]>([]);
-const emptyText = ref('Belum ada perbandingan.');
 const showTable = ref(false);
+const phase = ref<'idle' | 'invalid' | 'same' | 'result'>('idle');
+const counts = ref({ n: 0, chg: 0, add: 0, del: 0 });
+
+const diffMeta = computed(() => {
+  if (phase.value === 'invalid') return t('jsonDiff.cannotCompare');
+  if (phase.value === 'same') return t('jsonDiff.noDiff');
+  if (phase.value === 'result') return t('jsonDiff.summary', counts.value);
+  return t('jsonDiff.fillBoth');
+});
+
+const emptyText = computed(() => {
+  if (phase.value === 'invalid') return t('jsonDiff.fixInvalid');
+  if (phase.value === 'same') return t('jsonDiff.same');
+  return t('jsonDiff.empty');
+});
 
 function parseSideMessage(raw: string): { ok: false; message: string } | { ok: true; value: unknown } {
   const text = String(raw || '').trim();
-  if (!text) return { ok: false, message: 'Kosong.' };
+  if (!text) return { ok: false, message: t('jsonDiff.emptySide') };
   try {
     return { ok: true, value: JSON.parse(text) };
   } catch (err) {
-    return { ok: false, message: 'JSON tidak valid: ' + (err as Error).message };
+    return { ok: false, message: t('common.jsonInvalid', { message: (err as Error).message }) };
   }
 }
 
@@ -88,9 +104,9 @@ function walk(a: unknown, b: unknown, path: string, out: DiffRow[]) {
 }
 
 function typeLabel(type: DiffKind) {
-  if (type === 'add') return 'tambah';
-  if (type === 'del') return 'hapus';
-  return 'ubah';
+  if (type === 'add') return t('jsonDiff.added');
+  if (type === 'del') return t('jsonDiff.removed');
+  return t('jsonDiff.changed');
 }
 
 function typeClass(type: DiffKind) {
@@ -106,8 +122,7 @@ function compare() {
   errB.value = right.ok ? '' : right.message;
   if (!left.ok || !right.ok) {
     showTable.value = false;
-    emptyText.value = 'Perbaiki JSON yang tidak valid.';
-    diffMeta.value = 'Tidak bisa membandingkan.';
+    phase.value = 'invalid';
     rows.value = [];
     return;
   }
@@ -115,8 +130,7 @@ function compare() {
   walk(left.value, right.value, '', next);
   if (!next.length) {
     showTable.value = false;
-    emptyText.value = 'Kedua JSON sama.';
-    diffMeta.value = 'Tidak ada perbedaan.';
+    phase.value = 'same';
     rows.value = [];
     return;
   }
@@ -128,7 +142,8 @@ function compare() {
     else if (r.type === 'del') del++;
     else chg++;
   });
-  diffMeta.value = `${next.length} perbedaan · ${chg} diubah · ${add} ditambah · ${del} dihapus`;
+  counts.value = { n: next.length, chg, add, del };
+  phase.value = 'result';
   rows.value = next;
   showTable.value = true;
 }
@@ -162,15 +177,15 @@ onMounted(compare);
 </script>
 
 <template>
-  <ToolLayout title="JSON Diff" description="Bandingkan dua JSON. Objek dan array diurai per path, bukan per baris teks.">
+  <ToolLayout :title="t('tools.jsonDiff.title')" :description="t('jsonDiff.lead')">
     <div class="split-grid">
       <section class="panel card reveal">
-        <p class="panel-title">JSON A</p>
+        <p class="panel-title">{{ t('jsonDiff.jsonA') }}</p>
         <textarea v-model="jsonA" spellcheck="false" class="json-pane"></textarea>
         <p class="hint">{{ errA }}</p>
       </section>
       <section class="panel card reveal">
-        <p class="panel-title">JSON B</p>
+        <p class="panel-title">{{ t('jsonDiff.jsonB') }}</p>
         <textarea v-model="jsonB" spellcheck="false" class="json-pane"></textarea>
         <p class="hint">{{ errB }}</p>
       </section>
@@ -178,15 +193,15 @@ onMounted(compare);
 
     <section class="panel reveal" style="margin-top: 12px">
       <div class="row">
-        <button class="btn-primary" type="button" @click="compare">Bandingkan</button>
-        <button class="btn-ghost" type="button" @click="pretty">Rapihkan</button>
-        <button class="btn-ghost" type="button" @click="swap">Tukar A / B</button>
-        <button class="btn-ghost" type="button" @click="loadSample">Muat contoh</button>
+        <button class="btn-primary" type="button" @click="compare">{{ t('jsonDiff.compare') }}</button>
+        <button class="btn-ghost" type="button" @click="pretty">{{ t('common.pretty') }}</button>
+        <button class="btn-ghost" type="button" @click="swap">{{ t('jsonDiff.swap') }}</button>
+        <button class="btn-ghost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
       </div>
     </section>
 
     <section class="panel reveal">
-      <p class="panel-title">Perbedaan</p>
+      <p class="panel-title">{{ t('jsonDiff.differences') }}</p>
       <div class="card">
         <p class="meta">{{ diffMeta }}</p>
         <div class="table-scroll" style="margin-top: 12px">
@@ -194,9 +209,9 @@ onMounted(compare);
             <thead>
               <tr>
                 <th></th>
-                <th>Path</th>
-                <th>JSON A</th>
-                <th>JSON B</th>
+                <th>{{ t('jsonDiff.path') }}</th>
+                <th>{{ t('jsonDiff.jsonA') }}</th>
+                <th>{{ t('jsonDiff.jsonB') }}</th>
               </tr>
             </thead>
             <tbody>

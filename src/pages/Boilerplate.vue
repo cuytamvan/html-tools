@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { useToast } from '@/composables/useToast';
 import { copyText, pickFile } from '@/lib/escape';
@@ -19,6 +20,7 @@ const STORAGE_KEY = 'boilerplate:source';
 const IDB_KEY = 'boilerplate';
 const WATCH_MS = 800;
 
+const { t } = useI18n();
 const { message: toastMsg, visible: toastVisible, show: showToast } = useToast();
 
 const fileSource = ref<HTMLInputElement | null>(null);
@@ -27,7 +29,7 @@ const catalogHidden = ref(true);
 const clearSourceHidden = ref(true);
 const previewVisible = ref(false);
 const emptyVisible = ref(true);
-const emptyText = ref('Unduh contoh JSON, lalu pilih folder tempat boilerplates.json disimpan.');
+const emptyKey = ref('boilerplate.emptyNeedFile');
 const sourceLabel = ref('');
 const sourceWatching = ref(false);
 const sourcePending = ref(false);
@@ -71,13 +73,13 @@ function showItem(item: BoilerplateItem, kind: string) {
 
 function validateData(data: unknown) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    throw new Error('JSON harus berupa object dengan keys commands dan files.');
+    throw new Error(t('boilerplate.mustObject'));
   }
   const rec = data as Record<string, unknown>;
   const files = Array.isArray(rec.files) ? (rec.files as BoilerplateItem[]) : [];
   const commands = Array.isArray(rec.commands) ? (rec.commands as BoilerplateItem[]) : [];
   if (!files.length && !commands.length) {
-    throw new Error('File JSON tidak berisi commands atau files.');
+    throw new Error(t('boilerplate.emptyCatalog'));
   }
   return { files: files, commands: commands };
 }
@@ -100,7 +102,7 @@ function applyData(data: unknown, filename: string | undefined, opts?: { live?: 
   sourceWatching.value = !!opts.watching;
   sourcePending.value = false;
   emptyVisible.value = !(parsed.files.length || parsed.commands.length);
-  emptyText.value = 'Pilih salah satu tombol di atas untuk melihat kodenya.';
+  emptyKey.value = 'boilerplate.emptyPick';
 
   if (opts.live && selectedKey.value) {
     const list = selectedKind.value === 'commands' ? parsed.commands : parsed.files;
@@ -154,8 +156,8 @@ async function resolveJsonName(dir: any) {
   const preferred = names.find((name) => name.toLowerCase() === 'boilerplates.json');
   if (preferred) return preferred;
   if (names.length === 1) return names[0];
-  if (!names.length) throw new Error('Folder itu tidak berisi file JSON.');
-  throw new Error('Simpan file sebagai boilerplates.json, lalu pilih foldernya.');
+  if (!names.length) throw new Error(t('boilerplate.noJsonInFolder'));
+  throw new Error(t('boilerplate.saveAsName'));
 }
 
 function startWatch(dir: any, fileName: string) {
@@ -193,16 +195,16 @@ async function ingestFromDir(opts?: { live?: boolean; toast?: boolean }) {
     if (opts.live && text === lastText) return;
     loadFromText(text, file.name, { live: !!opts.live, watching: true });
     lastText = text;
-    if (opts.toast) showToast('File dimuat: ' + file.name);
-    else if (opts.live) showToast('File diperbarui.');
+    if (opts.toast) showToast(t('common.fileLoaded', { name: file.name }));
+    else if (opts.live) showToast(t('boilerplate.updated'));
   } catch (err: any) {
-    const invalid = err && String(err.message || '').indexOf('JSON tidak valid') === 0;
+    const invalid = err && err.code === 'JSON_INVALID';
     if (opts.live && invalid) {
       sourceLabel.value = watchedName;
       sourcePending.value = true;
       return;
     }
-    if (!opts.live) showToast((err && err.message) || 'Gagal membaca file JSON.');
+    if (!opts.live) showToast((err && err.message) || t('common.jsonReadFail'));
   } finally {
     ingestBusy = false;
   }
@@ -231,7 +233,7 @@ function clearSource() {
   sourceWatching.value = false;
   sourcePending.value = false;
   emptyVisible.value = true;
-  emptyText.value = 'Unduh contoh JSON, lalu pilih folder tempat boilerplates.json disimpan.';
+  emptyKey.value = 'boilerplate.emptyNeedFile';
   if (fileSource.value) fileSource.value.value = '';
   selectedKind.value = '';
   selectedKey.value = '';
@@ -243,7 +245,9 @@ function loadFromText(text: string, filename: string, opts?: { live?: boolean; w
   try {
     data = JSON.parse(text);
   } catch (err: any) {
-    throw new Error('JSON tidak valid: ' + err.message);
+    const error = new Error(t('common.jsonInvalid', { message: err.message })) as Error & { code: string };
+    error.code = 'JSON_INVALID';
+    throw error;
   }
   applyData(data, filename, opts);
   try {
@@ -256,12 +260,12 @@ function loadFromText(text: string, filename: string, opts?: { live?: boolean; w
 async function copyCode() {
   if (!currentCode.value) return;
   const ok = await copyText(currentCode.value);
-  showToast(ok ? 'Kode disalin ke clipboard.' : 'Gagal menyalin kode.');
+  showToast(ok ? t('common.copiedCode') : t('common.copyFailCode'));
 }
 
 function onClearSource() {
   clearSource();
-  showToast('Sumber data dihapus.');
+  showToast(t('boilerplate.sourceCleared'));
 }
 
 function readLocalFile(file: File | undefined) {
@@ -270,12 +274,12 @@ function readLocalFile(file: File | undefined) {
   reader.onload = () => {
     try {
       loadFromText(String(reader.result || ''), file.name, { watching: false });
-      showToast('File dimuat: ' + file.name);
+      showToast(t('common.fileLoaded', { name: file.name }));
     } catch (err: any) {
-      showToast(err.message || 'Gagal membaca file JSON.');
+      showToast(err.message || t('common.jsonReadFail'));
     }
   };
-  reader.onerror = () => showToast('Gagal membaca file.');
+  reader.onerror = () => showToast(t('common.fileReadFail'));
   reader.readAsText(file);
 }
 
@@ -289,7 +293,7 @@ async function openFilePicker() {
       return;
     } catch (err: any) {
       if (err && err.name === 'AbortError') return;
-      showToast((err && err.message) || 'Gagal membuka folder.');
+      showToast((err && err.message) || t('boilerplate.folderFail'));
       return;
     }
   }
@@ -376,14 +380,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <ToolLayout title="Boilerplate">
+  <ToolLayout :title="t('tools.boilerplate.title')">
     <template #lead>
-      Unduh contoh JSON, lalu pilih folder tempat file itu disimpan. Perubahan pada
-      <span class="mono">boilerplates.json</span> ikut ter-load.
+      {{ t('boilerplate.leadBefore') }}
+      <span class="mono">boilerplates.json</span>
+      {{ t('boilerplate.leadAfter') }}
     </template>
 
     <section class="panel reveal">
-      <p class="panel-title">Sumber data</p>
+      <p class="panel-title">{{ t('boilerplate.source') }}</p>
       <div
         class="card"
         :class="{ 'is-drop': isDrop }"
@@ -392,33 +397,35 @@ onUnmounted(() => {
         @drop="onDrop"
       >
         <p class="meta">
-          <template v-if="!sourceLabel">Belum ada file yang dipilih.</template>
-          <template v-else-if="sourcePending">
-            Memakai <b>{{ sourceLabel }}</b> — JSON belum valid, menunggu simpan.
-          </template>
-          <template v-else-if="sourceWatching">
-            Memakai <b>{{ sourceLabel }}</b> — perubahan di file ikut ter-load.
-          </template>
-          <template v-else>
-            Memakai <b>{{ sourceLabel }}</b> — pilih file lagi jika isinya berubah.
-          </template>
+          <template v-if="!sourceLabel">{{ t('boilerplate.none') }}</template>
+          <i18n-t v-else-if="sourcePending" keypath="boilerplate.usingPending" tag="span">
+            <template #name><b>{{ sourceLabel }}</b></template>
+          </i18n-t>
+          <i18n-t v-else-if="sourceWatching" keypath="boilerplate.usingWatch" tag="span">
+            <template #name><b>{{ sourceLabel }}</b></template>
+          </i18n-t>
+          <i18n-t v-else keypath="boilerplate.usingStatic" tag="span">
+            <template #name><b>{{ sourceLabel }}</b></template>
+          </i18n-t>
         </p>
         <div class="row" style="margin-top: 14px">
-          <button class="btn-primary" type="button" @click="openFilePicker">Pilih folder</button>
-          <a class="btn-ghost" href="/data/boilerplates.example.json" download="boilerplates.json">Unduh contoh</a>
-          <button class="btn-ghost" type="button" :hidden="clearSourceHidden" @click="onClearSource">Hapus sumber</button>
+          <button class="btn-primary" type="button" @click="openFilePicker">{{ t('boilerplate.chooseFolder') }}</button>
+          <a class="btn-ghost" href="/data/boilerplates.example.json" download="boilerplates.json">{{ t('boilerplate.downloadSample') }}</a>
+          <button class="btn-ghost" type="button" :hidden="clearSourceHidden" @click="onClearSource">{{ t('boilerplate.clearSource') }}</button>
         </div>
         <input ref="fileSource" type="file" class="file-native" accept=".json" @change="onFileChange" />
         <p class="result-note">
-          Unduh contoh, simpan sebagai <span class="mono">boilerplates.json</span>, lalu pilih foldernya. Format:
-          <span class="mono">{ "commands": [], "files": [] }</span>
+          <i18n-t keypath="boilerplate.note" tag="span">
+            <template #file><span class="mono">boilerplates.json</span></template>
+            <template #format><span class="mono">{ "commands": [], "files": [] }</span></template>
+          </i18n-t>
         </p>
       </div>
     </section>
 
     <div :hidden="catalogHidden">
       <section class="panel reveal">
-        <p class="panel-title">File</p>
+        <p class="panel-title">{{ t('boilerplate.files') }}</p>
         <div class="card">
           <div class="choice-group">
             <button
@@ -436,7 +443,7 @@ onUnmounted(() => {
       </section>
 
       <section class="panel reveal">
-        <p class="panel-title">Perintah</p>
+        <p class="panel-title">{{ t('boilerplate.commands') }}</p>
         <div class="card">
           <div class="choice-group">
             <button
@@ -463,14 +470,14 @@ onUnmounted(() => {
         <div class="code-wrap">
           <div class="code-toolbar">
             <span class="filename">{{ itemFilename }}</span>
-            <button class="btn-ghost btn-sm" type="button" @click="copyCode">Salin</button>
+            <button class="btn-ghost btn-sm" type="button" @click="copyCode">{{ t('common.copy') }}</button>
           </div>
           <pre class="code-block" v-html="codeHtml"></pre>
         </div>
       </section>
     </div>
 
-    <div class="empty-state" :style="{ display: emptyVisible ? 'block' : 'none' }">{{ emptyText }}</div>
+    <div class="empty-state" :style="{ display: emptyVisible ? 'block' : 'none' }">{{ t(emptyKey) }}</div>
   </ToolLayout>
   <div class="toast" :class="{ show: toastVisible }">{{ toastMsg }}</div>
 </template>

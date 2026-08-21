@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { useToast } from '@/composables/useToast';
 import { copyText } from '@/lib/escape';
@@ -11,21 +12,21 @@ const LANGS: { id: TypeLang; label: string }[] = [
   { id: 'py', label: 'Python' },
 ];
 
+const { t } = useI18n();
 const jsonInput = ref(JSON.stringify(SAMPLE, null, 2));
 const rootName = ref('Root');
 const lang = ref<TypeLang>('go');
 const { message: toastMsg, visible: toastVisible, show: showToast } = useToast();
 
-const EMPTY_HTML = '<span class="tok-comment">Tempel JSON untuk menghasilkan tipe.</span>';
-const INVALID_HTML = '<span class="tok-comment">Perbaiki JSON terlebih dahulu.</span>';
-
 const view = computed(() => {
   const raw = String(jsonInput.value || '').trim();
   const hint = rootName.value;
   const filename = fileNameFor(hint, lang.value);
+  const emptyHtml = '<span class="tok-comment">' + t('jsonTypes.pasteHint') + '</span>';
+  const invalidHtml = '<span class="tok-comment">' + t('jsonTypes.fixHint') + '</span>';
 
   if (!raw) {
-    return { jsonErr: '', code: '', filename, html: EMPTY_HTML, status: 'Belum ada JSON.' };
+    return { jsonErr: '', code: '', filename, html: emptyHtml, status: t('jsonTypes.noJson') };
   }
 
   let value: unknown;
@@ -33,21 +34,25 @@ const view = computed(() => {
     value = JSON.parse(raw);
   } catch (err) {
     return {
-      jsonErr: 'JSON tidak valid: ' + (err as Error).message,
+      jsonErr: t('common.jsonInvalid', { message: (err as Error).message }),
       code: '',
       filename,
-      html: INVALID_HTML,
-      status: 'JSON tidak valid.',
+      html: invalidHtml,
+      status: t('jsonTypes.invalid'),
     };
   }
 
   const generated = generateTypes(value, hint, lang.value);
+  const statusKey = generated.typeCount ? 'jsonTypes.typesCount' : 'jsonTypes.aliasCount';
+  const status =
+    t(statusKey, { n: generated.typeCount || 1, lang: generated.langLabel }) +
+    (generated.rootIsArray ? ' · ' + t('jsonTypes.rootArray') : '');
   return {
     jsonErr: '',
     code: generated.code,
     filename: generated.filename,
     html: highlightCode(generated.code, lang.value),
-    status: generated.status,
+    status,
   };
 });
 
@@ -56,7 +61,7 @@ function pretty() {
   if (!raw) return;
   try {
     jsonInput.value = JSON.stringify(JSON.parse(raw), null, 2);
-    showToast('JSON dirapikan.');
+    showToast(t('common.jsonPrettied'));
   } catch {
     /* live generate already surfaces the parse error */
   }
@@ -64,32 +69,29 @@ function pretty() {
 
 function loadSample() {
   jsonInput.value = JSON.stringify(SAMPLE, null, 2);
-  showToast('Contoh dimuat.');
+  showToast(t('common.sampleLoaded'));
 }
 
 async function copyCode() {
   if (!view.value.code) return;
   const ok = await copyText(view.value.code);
-  showToast(ok ? 'Kode disalin.' : 'Gagal menyalin.');
+  showToast(ok ? t('common.copiedCode') : t('common.copyFail'));
 }
 </script>
 
 <template>
-  <ToolLayout
-    title="JSON ke Tipe"
-    description="Ubah JSON menjadi struct Go, interface TypeScript, atau dataclass Python. Berjalan di browser."
-  >
+  <ToolLayout :title="t('tools.jsonTypes.title')" :description="t('jsonTypes.lead')">
     <section class="panel reveal">
-      <p class="panel-title">Pengaturan</p>
+      <p class="panel-title">{{ t('common.settings') }}</p>
       <div class="card">
         <div class="form-grid cols-2">
           <div class="field">
-            <label for="rootName">Nama tipe</label>
+            <label for="rootName">{{ t('jsonTypes.typeName') }}</label>
             <input id="rootName" v-model="rootName" type="text" spellcheck="false" autocomplete="off" />
-            <p class="hint">Dipakai untuk objek akar, atau elemen jika akar berupa array.</p>
+            <p class="hint">{{ t('jsonTypes.typeNameHint') }}</p>
           </div>
           <div class="field">
-            <label>Bahasa</label>
+            <label>{{ t('jsonTypes.language') }}</label>
             <div class="choice-group">
               <button
                 v-for="item in LANGS"
@@ -112,8 +114,8 @@ async function copyCode() {
         <div class="row between" style="margin-bottom: 12px; margin-top: 0">
           <p class="panel-title" style="margin: 0">JSON</p>
           <div class="row">
-            <button class="btn-ghost btn-sm" type="button" @click="pretty">Rapihkan</button>
-            <button class="btn-ghost btn-sm" type="button" @click="loadSample">Muat contoh</button>
+            <button class="btn-ghost btn-sm" type="button" @click="pretty">{{ t('common.pretty') }}</button>
+            <button class="btn-ghost btn-sm" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
           </div>
         </div>
         <textarea v-model="jsonInput" class="json-pane" spellcheck="false" placeholder="{ }"></textarea>
@@ -123,7 +125,7 @@ async function copyCode() {
         <div class="code-wrap">
           <div class="code-toolbar">
             <span class="filename">{{ view.filename }}</span>
-            <button class="btn-ghost btn-sm" type="button" @click="copyCode">Salin</button>
+            <button class="btn-ghost btn-sm" type="button" @click="copyCode">{{ t('common.copy') }}</button>
           </div>
           <pre class="code-block" v-html="view.html"></pre>
         </div>

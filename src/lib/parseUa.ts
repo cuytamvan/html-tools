@@ -20,9 +20,9 @@ export function match(ua: string, re: RegExp): string {
 export function parseUA(ua: string): UaInfo {
   ua = String(ua || '');
   const info: UaInfo = {
-    browser: { name: 'Tidak diketahui', version: '' },
-    engine: { name: 'Tidak diketahui', version: '' },
-    os: { name: 'Tidak diketahui', version: '' },
+    browser: { name: '', version: '' },
+    engine: { name: '', version: '' },
+    os: { name: '', version: '' },
     device: { type: 'desktop', vendor: '', model: '' },
   };
 
@@ -101,13 +101,6 @@ export function pair(name: string, version: string): string {
   return version ? name + ' ' + version : name;
 }
 
-export function typeLabel(type: string): string {
-  if (type === 'phone') return 'Ponsel';
-  if (type === 'tablet') return 'Tablet';
-  if (type === 'bot') return 'Bot';
-  return 'Desktop';
-}
-
 export function typeClass(type: string): string {
   if (type === 'phone') return 'tag blue';
   if (type === 'tablet') return 'tag green';
@@ -116,11 +109,11 @@ export function typeClass(type: string): string {
 }
 
 export function highlightUA(ua: string, info: UaInfo): string {
-  if (!ua) return '<span class="meta">Tempel User-Agent untuk diurai.</span>';
+  if (!ua) return '';
   let html = escapeHtml(ua);
   const tokens = [info.browser.name, info.engine.name, info.os.name, info.device.model].filter(Boolean);
   tokens.forEach((tok) => {
-    if (tok === 'Tidak diketahui' || tok.length < 3) return;
+    if (tok.length < 3) return;
     const re = new RegExp('(' + tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
     html = html.replace(re, '<mark>$1</mark>');
   });

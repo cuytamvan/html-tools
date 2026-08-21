@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { copyText, downloadFile, pickFile } from '@/lib/escape';
 import { useToast } from '@/composables/useToast';
@@ -10,13 +11,15 @@ const SAMPLE_ROWS = [
   { nama: 'Andi Wijaya', umur: 24, kota: 'Surabaya', aktif: true },
 ];
 
+const { t } = useI18n();
 const csvText = ref('');
 const jsonText = ref('');
 const delim = ref(',');
 const hasHeader = ref(true);
 const coerce = ref(true);
 const errorMsg = ref('');
-const statusMeta = ref('Belum ada konversi.');
+const status = ref<{ key: string; n?: number }>({ key: 'csvJson.noConversion' });
+const statusMeta = computed(() => t(status.value.key, { n: status.value.n ?? 0 }));
 const fileCsv = ref<HTMLInputElement | null>(null);
 const fileJson = ref<HTMLInputElement | null>(null);
 const { message: toastMsg, visible: toastVisible, show: showToast } = useToast();
@@ -155,7 +158,7 @@ function objectsToCsv(list: Record<string, unknown>[], separator: string) {
       }
     });
   });
-  if (!keys.length) throw new Error('JSON harus berupa array of object.');
+  if (!keys.length) throw new Error(t('csvJson.mustArray'));
   const lines = [keys.map((k) => csvEscape(k, separator)).join(separator)];
   list.forEach((item) => {
     lines.push(keys.map((k) => csvEscape(item ? item[k] : '', separator)).join(separator));
@@ -175,51 +178,51 @@ function jsonToList(parsed: unknown): Record<string, unknown>[] {
     });
   }
   if (parsed !== null && typeof parsed === 'object') return [parsed as Record<string, unknown>];
-  throw new Error('JSON harus berupa object atau array.');
+  throw new Error(t('csvJson.mustObjectOrArray'));
 }
 
 function csvToJson() {
   clearError();
   const rows = parseCsv(csvText.value, delim.value);
   if (!rows.length) {
-    showError('CSV kosong.');
+    showError(t('csvJson.emptyCsv'));
     return;
   }
   const list = rowsToObjects(rows, hasHeader.value, coerce.value);
   if (!list.length) {
-    showError('Tidak ada baris data.');
+    showError(t('csvJson.noRows'));
     return;
   }
   jsonText.value = JSON.stringify(list, null, 2);
-  statusMeta.value = list.length + ' baris diubah ke JSON.';
-  showToast('CSV diubah ke JSON.');
+  status.value = { key: 'csvJson.rowsToJson', n: list.length };
+  showToast(t('csvJson.csvConverted'));
 }
 
 function jsonToCsv() {
   clearError();
   const raw = jsonText.value.trim();
   if (!raw) {
-    showError('JSON kosong.');
+    showError(t('csvJson.emptyJson'));
     return;
   }
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch (err) {
-    showError('JSON tidak valid: ' + (err as Error).message);
+    showError(t('common.jsonInvalid', { message: (err as Error).message }));
     return;
   }
   try {
     const list = jsonToList(parsed);
     if (!list.length) {
-      showError('Array JSON kosong.');
+      showError(t('csvJson.emptyArray'));
       return;
     }
     csvText.value = objectsToCsv(list, delim.value);
-    statusMeta.value = list.length + ' baris diubah ke CSV.';
-    showToast('JSON diubah ke CSV.');
+    status.value = { key: 'csvJson.rowsToCsv', n: list.length };
+    showToast(t('csvJson.jsonConverted'));
   } catch (err) {
-    showError((err as Error).message || 'Gagal mengubah ke CSV.');
+    showError((err as Error).message || t('csvJson.csvFail'));
   }
 }
 
@@ -227,14 +230,14 @@ function prettyJson() {
   clearError();
   const raw = jsonText.value.trim();
   if (!raw) {
-    showError('JSON kosong.');
+    showError(t('csvJson.emptyJson'));
     return;
   }
   try {
     jsonText.value = JSON.stringify(JSON.parse(raw), null, 2);
-    showToast('JSON dirapikan.');
+    showToast(t('common.jsonPrettied'));
   } catch (err) {
-    showError('JSON tidak valid: ' + (err as Error).message);
+    showError(t('common.jsonInvalid', { message: (err as Error).message }));
   }
 }
 
@@ -242,7 +245,7 @@ function loadSample() {
   clearError();
   jsonText.value = JSON.stringify(SAMPLE_ROWS, null, 2);
   csvText.value = objectsToCsv(SAMPLE_ROWS, delim.value);
-  statusMeta.value = 'Contoh dimuat.';
+  status.value = { key: 'csvJson.sampleLoaded' };
 }
 
 function readFile(file: File | undefined, kind: 'csv' | 'json') {
@@ -252,27 +255,27 @@ function readFile(file: File | undefined, kind: 'csv' | 'json') {
     const text = String(reader.result || '');
     if (kind === 'csv') csvText.value = text;
     else jsonText.value = text;
-    showToast('File dimuat: ' + file.name);
+    showToast(t('common.fileLoaded', { name: file.name }));
   };
-  reader.onerror = () => showError('Gagal membaca file.');
+  reader.onerror = () => showError(t('common.fileReadFail'));
   reader.readAsText(file);
 }
 
 async function copy(kind: 'csv' | 'json') {
   const text = kind === 'csv' ? csvText.value : jsonText.value;
   if (!text) {
-    showError('Tidak ada teks untuk disalin.');
+    showError(t('csvJson.nothingToCopy'));
     return;
   }
   clearError();
   const ok = await copyText(text);
-  showToast(ok ? (kind === 'csv' ? 'CSV disalin.' : 'JSON disalin.') : 'Gagal menyalin.');
+  showToast(ok ? (kind === 'csv' ? t('common.copiedCsv') : t('common.copiedJson')) : t('common.copyFail'));
 }
 
 function download(kind: 'csv' | 'json') {
   if (kind === 'csv') {
     if (!csvText.value) {
-      showError('CSV kosong.');
+      showError(t('csvJson.emptyCsv'));
       return;
     }
     clearError();
@@ -280,7 +283,7 @@ function download(kind: 'csv' | 'json') {
     return;
   }
   if (!jsonText.value) {
-    showError('JSON kosong.');
+    showError(t('csvJson.emptyJson'));
     return;
   }
   clearError();
@@ -291,39 +294,36 @@ loadSample();
 </script>
 
 <template>
-  <ToolLayout
-    title="CSV / JSON"
-    description="Ubah CSV menjadi array of object, atau sebaliknya. Berjalan di browser, file tidak dikirim ke server."
-  >
+  <ToolLayout :title="t('tools.csvJson.title')" :description="t('csvJson.lead')">
     <section class="panel reveal">
-      <p class="panel-title">Pengaturan</p>
+      <p class="panel-title">{{ t('common.settings') }}</p>
       <div class="card">
         <div class="form-grid cols-2">
           <div class="field">
-            <label>Pemisah</label>
+            <label>{{ t('csvJson.delimiter') }}</label>
             <div class="choice-group">
               <button type="button" class="btn-ghost btn-sm" :class="{ 'is-active': delim === ',' }" @click="delim = ','">
-                Koma
+                {{ t('csvJson.comma') }}
               </button>
               <button type="button" class="btn-ghost btn-sm" :class="{ 'is-active': delim === ';' }" @click="delim = ';'">
-                Titik koma
+                {{ t('csvJson.semicolon') }}
               </button>
               <button type="button" class="btn-ghost btn-sm" :class="{ 'is-active': delim === '\t' }" @click="delim = '\t'">
-                Tab
+                {{ t('csvJson.tab') }}
               </button>
             </div>
           </div>
           <div class="field">
-            <label>Opsi</label>
+            <label>{{ t('csvJson.options') }}</label>
             <div class="choice-group">
               <button type="button" class="btn-ghost btn-sm" :class="{ 'is-active': hasHeader }" @click="hasHeader = !hasHeader">
-                Baris header
+                {{ t('csvJson.headerRow') }}
               </button>
               <button type="button" class="btn-ghost btn-sm" :class="{ 'is-active': coerce }" @click="coerce = !coerce">
-                Tebak tipe
+                {{ t('csvJson.guessTypes') }}
               </button>
             </div>
-            <p class="hint">Tebak tipe mengubah angka, true/false, dan null.</p>
+            <p class="hint">{{ t('csvJson.guessHint') }}</p>
           </div>
         </div>
       </div>
@@ -333,7 +333,7 @@ loadSample();
       <section class="panel card reveal">
         <div class="row between" style="margin-bottom: 12px">
           <p class="panel-title" style="margin: 0">CSV</p>
-          <button class="btn-ghost btn-sm" type="button" @click="fileCsv && pickFile(fileCsv)">Pilih file</button>
+          <button class="btn-ghost btn-sm" type="button" @click="fileCsv && pickFile(fileCsv)">{{ t('common.chooseFile') }}</button>
         </div>
         <textarea v-model="csvText" class="json-pane" spellcheck="false" placeholder="nama,umur,kota"></textarea>
         <input ref="fileCsv" type="file" class="file-native" accept=".csv,text/csv,text/plain" @change="readFile(($event.target as HTMLInputElement).files?.[0], 'csv')" />
@@ -341,7 +341,7 @@ loadSample();
       <section class="panel card reveal">
         <div class="row between" style="margin-bottom: 12px">
           <p class="panel-title" style="margin: 0">JSON</p>
-          <button class="btn-ghost btn-sm" type="button" @click="fileJson && pickFile(fileJson)">Pilih file</button>
+          <button class="btn-ghost btn-sm" type="button" @click="fileJson && pickFile(fileJson)">{{ t('common.chooseFile') }}</button>
         </div>
         <textarea v-model="jsonText" class="json-pane" spellcheck="false" placeholder='[{"nama":"Budi Santoso"}]'></textarea>
         <input ref="fileJson" type="file" class="file-native" accept=".json,application/json" @change="readFile(($event.target as HTMLInputElement).files?.[0], 'json')" />
@@ -350,16 +350,16 @@ loadSample();
 
     <section class="panel reveal">
       <div class="row">
-        <button class="btn-primary" type="button" @click="csvToJson">CSV ke JSON</button>
-        <button class="btn-primary" type="button" @click="jsonToCsv">JSON ke CSV</button>
-        <button class="btn-ghost" type="button" @click="loadSample">Muat contoh</button>
-        <button class="btn-ghost" type="button" @click="prettyJson">Rapihkan JSON</button>
+        <button class="btn-primary" type="button" @click="csvToJson">{{ t('csvJson.csvToJson') }}</button>
+        <button class="btn-primary" type="button" @click="jsonToCsv">{{ t('csvJson.jsonToCsv') }}</button>
+        <button class="btn-ghost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
+        <button class="btn-ghost" type="button" @click="prettyJson">{{ t('common.prettyJson') }}</button>
       </div>
       <div class="row" style="margin-top: 12px">
-        <button class="btn-ghost btn-sm" type="button" @click="copy('csv')">Salin CSV</button>
-        <button class="btn-ghost btn-sm" type="button" @click="copy('json')">Salin JSON</button>
-        <button class="btn-ghost btn-sm" type="button" @click="download('csv')">Unduh CSV</button>
-        <button class="btn-ghost btn-sm" type="button" @click="download('json')">Unduh JSON</button>
+        <button class="btn-ghost btn-sm" type="button" @click="copy('csv')">{{ t('csvJson.copyCsv') }}</button>
+        <button class="btn-ghost btn-sm" type="button" @click="copy('json')">{{ t('csvJson.copyJson') }}</button>
+        <button class="btn-ghost btn-sm" type="button" @click="download('csv')">{{ t('csvJson.downloadCsv') }}</button>
+        <button class="btn-ghost btn-sm" type="button" @click="download('json')">{{ t('csvJson.downloadJson') }}</button>
       </div>
       <div class="error-box" :style="{ display: errorMsg ? 'block' : 'none' }">{{ errorMsg }}</div>
       <p class="meta" style="margin-top: 14px">{{ statusMeta }}</p>

@@ -5,7 +5,9 @@ export type TypeLang = 'go' | 'ts' | 'py';
 export type GenerateTypesResult = {
   code: string;
   filename: string;
-  status: string;
+  typeCount: number;
+  rootIsArray: boolean;
+  langLabel: string;
 };
 
 export const SAMPLE = {
@@ -513,6 +515,8 @@ export function generateTypes(jsonValue: unknown, rootName: string, lang: TypeLa
   return {
     code,
     filename: fileNameFor(rootName, lang),
-    status: (n ? n + ' tipe' : '1 alias') + ' · ' + langLabel + (info.rootIsArray ? ' · akar array' : ''),
+    typeCount: n,
+    rootIsArray: info.rootIsArray,
+    langLabel,
   };
 }

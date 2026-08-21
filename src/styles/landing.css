@@ -30,7 +30,14 @@ body.landing .ambient::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
   padding: 18px 0;
+}
+.landing-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 .landing-mark {
   display: inline-flex;

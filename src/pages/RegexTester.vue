@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { escapeHtml } from '@/lib/escape';
 
+const { t } = useI18n();
 const MAX_MATCHES = 400;
 const FLAGS = ['g', 'i', 'm', 's', 'u', 'y'] as const;
 
@@ -41,7 +43,7 @@ function collectMatches(re: RegExp, text: string) {
 }
 
 function highlight(text: string, matches: RegExpExecArray[]) {
-  if (!text) return '<span class="meta">Teks uji kosong.</span>';
+  if (!text) return '<span class="meta">' + t('regex.emptyTest') + '</span>';
   if (!matches.length) return escapeHtml(text);
   let html = '';
   let last = 0;
@@ -80,12 +82,12 @@ const result = computed(() => {
   if (!pattern.value) {
     return {
       error: '',
-      preview: escapeHtml(text) || '<span class="meta">Isi pola untuk mulai.</span>',
+      preview: escapeHtml(text) || '<span class="meta">' + t('regex.fillPattern') + '</span>',
       previewEmpty: !text,
       replaceOut: text,
-      meta: '0 cocokan',
+      meta: t('regex.zeroMatches'),
       rows: [] as MatchRow[],
-      empty: 'Isi pola regular expression.',
+      empty: t('regex.enterPattern'),
     };
   }
   let re: RegExp;
@@ -93,13 +95,13 @@ const result = computed(() => {
     re = new RegExp(pattern.value, activeFlags.value.join(''));
   } catch (err) {
     return {
-      error: 'Pola tidak valid: ' + (err as Error).message,
+      error: t('regex.invalidPattern', { message: (err as Error).message }),
       preview: escapeHtml(text),
       previewEmpty: false,
       replaceOut: text,
-      meta: 'Pola error',
+      meta: t('regex.patternError'),
       rows: [] as MatchRow[],
-      empty: 'Perbaiki pola terlebih dahulu.',
+      empty: t('regex.fixPattern'),
     };
   }
   const matches = collectMatches(re, text);
@@ -116,18 +118,20 @@ const result = computed(() => {
     preview: highlight(text, matches),
     previewEmpty: false,
     replaceOut,
-    meta: matches.length + ' cocokan' + (capped ? ' (dibatasi ' + MAX_MATCHES + ')' : ''),
+    meta: capped
+      ? t('regex.matchCapped', { n: matches.length, max: MAX_MATCHES })
+      : t('regex.matchCount', { n: matches.length }),
     rows: matches.map((m) => ({ text: m[0], index: m.index, groups: groupsText(m) })),
-    empty: 'Tidak ada yang cocok.',
+    empty: t('regex.noMatch'),
   };
 });
 
 </script>
 
 <template>
-  <ToolLayout title="Regex Tester" description="Uji pola JavaScript terhadap teks, lihat semua kecocokan, grup, dan hasil ganti.">
+  <ToolLayout :title="t('tools.regexTester.title')" :description="t('regex.lead')">
     <section class="panel reveal">
-      <p class="panel-title">Pola</p>
+      <p class="panel-title">{{ t('regex.pattern') }}</p>
       <div class="card">
         <div class="field">
           <label for="pattern">Regular expression</label>
@@ -140,13 +144,13 @@ const result = computed(() => {
               class="input-mono"
               autocomplete="off"
               spellcheck="false"
-              placeholder="pola"
+              :placeholder="t('regex.patternPlaceholder')"
             />
             <span class="slash" aria-hidden="true">/</span>
           </div>
         </div>
         <div class="field" style="margin-top: 16px">
-          <label>Bendera</label>
+          <label>{{ t('regex.flags') }}</label>
           <div class="choice-group">
             <button
               v-for="flag in FLAGS"
@@ -160,7 +164,7 @@ const result = computed(() => {
               {{ flag }}
             </button>
           </div>
-          <p class="hint">g global, i ignore case, m multiline, s dotAll, u unicode, y sticky</p>
+          <p class="hint">{{ t('regex.flagsHint') }}</p>
         </div>
         <div class="error-box" :style="{ display: result.error ? 'block' : 'none' }">{{ result.error }}</div>
       </div>
@@ -168,17 +172,17 @@ const result = computed(() => {
 
     <div class="split-grid">
       <section class="panel card reveal">
-        <p class="panel-title">Teks uji</p>
+        <p class="panel-title">{{ t('regex.testText') }}</p>
         <textarea v-model="haystack" spellcheck="false"></textarea>
       </section>
       <section class="panel card reveal">
-        <p class="panel-title">Pratinjau</p>
+        <p class="panel-title">{{ t('regex.preview') }}</p>
         <pre class="regex-preview" :class="{ 'is-empty': result.previewEmpty }" v-html="result.preview"></pre>
       </section>
     </div>
 
     <section class="panel reveal">
-      <p class="panel-title">Kecocokan</p>
+      <p class="panel-title">{{ t('regex.matches') }}</p>
       <div class="card">
         <p class="meta">{{ result.meta }}</p>
         <div class="table-scroll" style="margin-top: 12px">
@@ -186,9 +190,9 @@ const result = computed(() => {
             <thead>
               <tr>
                 <th>#</th>
-                <th>Teks</th>
-                <th>Indeks</th>
-                <th>Grup</th>
+                <th>{{ t('regex.text') }}</th>
+                <th>{{ t('regex.index') }}</th>
+                <th>{{ t('regex.groups') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -206,10 +210,10 @@ const result = computed(() => {
     </section>
 
     <section class="panel reveal">
-      <p class="panel-title">Ganti</p>
+      <p class="panel-title">{{ t('regex.replace') }}</p>
       <div class="card">
         <div class="field">
-          <label for="replacement">String pengganti</label>
+          <label for="replacement">{{ t('regex.replacement') }}</label>
           <input
             id="replacement"
             v-model="replacement"
@@ -219,7 +223,12 @@ const result = computed(() => {
             spellcheck="false"
             placeholder="$& atau $1"
           />
-          <p class="hint"><span class="mono">$&amp;</span> seluruh cocokan, <span class="mono">$1</span> grup pertama</p>
+          <p class="hint">
+            <i18n-t keypath="regex.replaceHint" tag="span">
+              <template #all><span class="mono">$&amp;</span></template>
+              <template #group><span class="mono">$1</span></template>
+            </i18n-t>
+          </p>
         </div>
         <pre class="regex-preview" style="margin-top: 16px">{{ result.replaceOut }}</pre>
       </div>
