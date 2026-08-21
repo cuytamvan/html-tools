@@ -77,7 +77,7 @@ function tagClass(kind: string) {
     <section class="landing-section" id="tools">
       <div class="landing-section-head">
         <h2>{{ t('landing.toolsTitle') }}</h2>
-        <p>{{ t('landing.toolsLead') }}</p>
+        <p>{{ t('landing.toolsLead', { n: tools.length }) }}</p>
       </div>
       <div class="tool-grid">
         <router-link v-for="tool in tools" :key="tool.path" class="tool-item" :to="tool.path">

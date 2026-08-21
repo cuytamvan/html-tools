@@ -13,6 +13,7 @@ export const Router = createRouter({
     { path: '/regex-tester', component: () => import('@/pages/RegexTester.vue'), meta: { titleKey: 'tools.regexTester.title' } },
     { path: '/user-agent', component: () => import('@/pages/UserAgent.vue'), meta: { titleKey: 'tools.userAgent.title' } },
     { path: '/boilerplate', component: () => import('@/pages/Boilerplate.vue'), meta: { titleKey: 'tools.boilerplate.title' } },
+    { path: '/qr-code', component: () => import('@/pages/QrCode.vue'), meta: { titleKey: 'tools.qrCode.title' } },
   ],
   scrollBehavior(to) {
     if (to.hash) {

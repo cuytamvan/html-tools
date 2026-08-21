@@ -466,9 +466,34 @@ mark.mark-alt {
     grid-template-columns: 1fr;
   }
 }
+.qr-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 288px;
+  padding: 24px;
+  background: #f9f9f8;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.qr-frame img {
+  display: block;
+  width: 240px;
+  height: 240px;
+  image-rendering: pixelated;
+  background: #fff;
+  border: 1px solid var(--line);
+}
 .value.mono,
 .mono {
   font-family: var(--mono);
+}
+button:disabled,
+.btn-primary:disabled,
+.btn-ghost:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
 }
 .result-row .value.mono {
   word-break: break-all;
