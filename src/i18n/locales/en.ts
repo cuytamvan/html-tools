@@ -106,7 +106,7 @@ export default {
   jsonSearcher: {
     lead: 'Paste JSON (an object, an array of objects, several objects separated by commas, or one object per line). Search, filter, and view the results in a table.',
     input: 'JSON input',
-    placeholder: 'Paste JSON here. Example: [{"nama":"Budi"}] or {"nama":"Budi"} or {"nama":"Budi"}{"nama":"Siti"}',
+    placeholder: 'Paste JSON here. An object, an array of objects, comma-separated objects, or one object per line.',
     process: 'Process JSON',
     rowsStoredSuffix: 'stored rows',
     clearAll: 'Clear all data',

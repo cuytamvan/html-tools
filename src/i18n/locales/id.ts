@@ -106,7 +106,7 @@ export default {
   jsonSearcher: {
     lead: 'Paste JSON (Object, Array of Object, beberapa Object dipisah koma, atau satu Object per baris), cari, filter, dan lihat hasilnya dalam tabel.',
     input: 'Input JSON',
-    placeholder: 'Paste JSON di sini. Contoh: [{"nama":"Budi"}] atau {"nama":"Budi"} atau {"nama":"Budi"}{"nama":"Siti"}',
+    placeholder: 'Paste JSON di sini. Object, array of object, object dipisah koma, atau satu object per baris.',
     process: 'Proses JSON',
     rowsStoredSuffix: 'baris data tersimpan',
     clearAll: 'Hapus Semua Data',
