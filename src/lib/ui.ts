@@ -1,8 +1,7 @@
 const btnBase =
   'inline-block cursor-pointer rounded-sm border px-3.5 py-2 font-sans text-ui font-medium no-underline transition-[background-color,color,border-color,transform] duration-150 ease-editorial active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 disabled:active:scale-100';
 
-const tagBase =
-  'mb-3 inline-block rounded-full px-2 py-0.75 text-2xs font-medium uppercase tracking-tag';
+const tagBase = 'mb-3 inline-block rounded-full px-2 py-0.75 text-2xs font-medium uppercase tracking-tag';
 
 export const ui = {
   wrap: 'relative z-[1] mx-auto max-w-5xl px-5 py-16 tool:px-6 tool:py-24 tool:pb-32',
@@ -32,7 +31,7 @@ export const ui = {
     'w-full min-h-[120px] resize-y rounded-sm border border-line bg-surface px-3.5 py-3 font-mono text-ui leading-[1.55] text-ink focus:border-ink focus:outline-none',
   jsonPane: 'min-h-[240px]',
   search:
-    'min-w-[200px] flex-[1_1_260px] rounded-none border-0 border-b border-line bg-transparent px-0 py-2 font-serif text-base tracking-tight focus:border-ink focus:outline-none',
+    'min-w-[200px] flex-[1_1_260px] rounded-none border-0 border-b border-line bg-transparent px-0 py-2 text-base tracking-tight focus:border-ink focus:outline-none',
   select:
     'max-w-[220px] rounded-sm border border-line bg-surface px-2.5 py-1.5 text-ui text-ink focus:border-ink focus:outline-none',
   btnGhost: `${btnBase} border-line bg-surface text-ink hover:border-line-strong`,
@@ -50,8 +49,7 @@ export const ui = {
   badge:
     'whitespace-nowrap rounded-full bg-pale-blue px-2.5 py-1 text-2xs font-medium tracking-tag text-pale-blue-ink uppercase',
   error: 'mt-3.5 rounded-sm bg-danger-bg px-3 py-2.5 text-ui text-danger',
-  toast:
-    'fixed bottom-7 left-1/2 z-[60] -translate-x-1/2 rounded-sm bg-ink px-4 py-2.5 text-ui text-white',
+  toast: 'fixed bottom-7 left-1/2 z-[60] -translate-x-1/2 rounded-sm bg-ink px-4 py-2.5 text-ui text-white',
   overlay: 'fixed inset-0 z-50 items-center justify-center bg-overlay',
   modal: 'w-[380px] max-w-[90vw] rounded-md border border-line bg-surface p-8',
   modalWide: 'flex max-h-[84vh] w-[640px] max-w-[90vw] flex-col rounded-md border border-line bg-surface p-8',
@@ -72,11 +70,9 @@ export const ui = {
   resultValue: 'text-right font-mono text-ui font-medium tabular-nums',
   resultTotal: 'font-serif text-total font-normal tracking-tight text-ink',
   codeWrap: 'relative overflow-hidden rounded-md border border-line bg-surface',
-  codeToolbar:
-    'flex items-center justify-between gap-2 border-b border-line bg-paper px-3.5 py-2.5 text-xs text-muted',
+  codeToolbar: 'flex items-center justify-between gap-2 border-b border-line bg-paper px-3.5 py-2.5 text-xs text-muted',
   filename: 'font-mono text-ink',
-  codeBlock:
-    'm-0 max-h-[62vh] overflow-auto bg-surface p-4 font-mono text-ui leading-[1.6] whitespace-pre text-ink',
+  codeBlock: 'm-0 max-h-[62vh] overflow-auto bg-surface p-4 font-mono text-ui leading-[1.6] whitespace-pre text-ink',
   codeSnippet:
     'mt-4.5 overflow-x-auto rounded-sm border border-line bg-bone px-4.5 py-4 font-mono text-xs leading-[1.7] whitespace-pre text-ink',
   regexPreview:
@@ -89,8 +85,7 @@ export const ui = {
 };
 
 export function tagClass(kind: string, inline = false): string {
-  const base =
-    kind === 'blue' ? ui.tagBlue : kind === 'green' ? ui.tagGreen : kind === 'red' ? ui.tagRed : ui.tag;
+  const base = kind === 'blue' ? ui.tagBlue : kind === 'green' ? ui.tagGreen : kind === 'red' ? ui.tagRed : ui.tag;
   return inline ? `${base} ${ui.tagInline}` : base;
 }
 
