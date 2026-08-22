@@ -5,7 +5,7 @@ import ToolLayout from '@/components/ToolLayout.vue';
 import { useToast } from '@/composables/useToast';
 import { copyText } from '@/lib/escape';
 import { fileNameFor, generateTypes, highlightCode, SAMPLE, type TypeLang } from '@/lib/jsonToTypes';
-import { cn, ui } from '@/lib/ui';
+import { choiceClass, ui } from '@/lib/ui';
 
 const LANGS: { id: TypeLang; label: string }[] = [
   { id: 'go', label: 'Go' },
@@ -98,7 +98,7 @@ async function copyCode() {
                 v-for="item in LANGS"
                 :key="item.id"
                 type="button"
-                :class="cn(ui.btnGhostSm, lang === item.id && ui.btnActive)"
+                :class="choiceClass(lang === item.id)"
                 @click="lang = item.id"
               >
                 {{ item.label }}

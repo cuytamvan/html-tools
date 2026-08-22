@@ -4,7 +4,7 @@ import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { copyText, downloadFile, pickFile } from '@/lib/escape';
 import { useToast } from '@/composables/useToast';
-import { cn, ui } from '@/lib/ui';
+import { choiceClass, ui } from '@/lib/ui';
 
 const SAMPLE_ROWS = [
   { nama: 'Budi Santoso', umur: 28, kota: 'Jakarta', aktif: true },
@@ -303,13 +303,13 @@ loadSample();
           <div>
             <label :class="ui.label">{{ t('csvJson.delimiter') }}</label>
             <div :class="ui.choices">
-              <button type="button" :class="cn(ui.btnGhostSm, delim === ',' && ui.btnActive)" @click="delim = ','">
+              <button type="button" :class="choiceClass(delim === ',')" @click="delim = ','">
                 {{ t('csvJson.comma') }}
               </button>
-              <button type="button" :class="cn(ui.btnGhostSm, delim === ';' && ui.btnActive)" @click="delim = ';'">
+              <button type="button" :class="choiceClass(delim === ';')" @click="delim = ';'">
                 {{ t('csvJson.semicolon') }}
               </button>
-              <button type="button" :class="cn(ui.btnGhostSm, delim === '\t' && ui.btnActive)" @click="delim = '\t'">
+              <button type="button" :class="choiceClass(delim === '\t')" @click="delim = '\t'">
                 {{ t('csvJson.tab') }}
               </button>
             </div>
@@ -317,10 +317,10 @@ loadSample();
           <div>
             <label :class="ui.label">{{ t('csvJson.options') }}</label>
             <div :class="ui.choices">
-              <button type="button" :class="cn(ui.btnGhostSm, hasHeader && ui.btnActive)" @click="hasHeader = !hasHeader">
+              <button type="button" :class="choiceClass(hasHeader)" @click="hasHeader = !hasHeader">
                 {{ t('csvJson.headerRow') }}
               </button>
-              <button type="button" :class="cn(ui.btnGhostSm, coerce && ui.btnActive)" @click="coerce = !coerce">
+              <button type="button" :class="choiceClass(coerce)" @click="coerce = !coerce">
                 {{ t('csvJson.guessTypes') }}
               </button>
             </div>

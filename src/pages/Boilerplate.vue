@@ -6,7 +6,7 @@ import { useToast } from '@/composables/useToast';
 import { copyText, pickFile } from '@/lib/escape';
 import { forgetFileHandle, persistFileHandle, readFileHandle } from '@/lib/fileHandles';
 import { highlight } from '@/lib/highlight';
-import { cn, ui } from '@/lib/ui';
+import { choiceClass, ui } from '@/lib/ui';
 
 type BoilerplateItem = {
   id?: string;
@@ -432,7 +432,7 @@ onUnmounted(() => {
               v-for="(item, i) in fileItems"
               :key="'files-' + itemKey(item) + '-' + i"
               type="button"
-              :class="cn(ui.btnGhostSm, selectedKind === 'files' && selectedKey === itemKey(item) && ui.btnActive)"
+              :class="choiceClass(selectedKind === 'files' && selectedKey === itemKey(item))"
               @click="showItem(item, 'files')"
             >
               {{ item.label || item.id }}
@@ -449,7 +449,7 @@ onUnmounted(() => {
               v-for="(item, i) in commandItems"
               :key="'commands-' + itemKey(item) + '-' + i"
               type="button"
-              :class="cn(ui.btnGhostSm, selectedKind === 'commands' && selectedKey === itemKey(item) && ui.btnActive)"
+              :class="choiceClass(selectedKind === 'commands' && selectedKey === itemKey(item))"
               @click="showItem(item, 'commands')"
             >
               {{ item.label || item.id }}

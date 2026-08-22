@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { escapeHtml } from '@/lib/escape';
-import { cn, ui } from '@/lib/ui';
+import { choiceClass, ui } from '@/lib/ui';
 
 const { t } = useI18n();
 const MAX_MATCHES = 400;
@@ -157,7 +157,7 @@ const result = computed(() => {
               v-for="flag in FLAGS"
               :key="flag"
               type="button"
-              :class="cn(ui.btnGhostSm, activeFlags.includes(flag) && ui.btnActive)"
+              :class="choiceClass(activeFlags.includes(flag))"
               :title="flag"
               @click="toggleFlag(flag)"
             >

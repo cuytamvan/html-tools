@@ -40,7 +40,7 @@ export const ui = {
   btnPrimarySm: `${btnBase} border-ink bg-ink px-2.75 py-1.5 text-xs text-white hover:border-ink-soft hover:bg-ink-soft hover:text-white`,
   btnDanger: `${btnBase} border-transparent bg-danger-bg text-danger hover:border-transparent hover:bg-danger-soft`,
   btnDangerSm: `${btnBase} border-transparent bg-danger-bg px-2.75 py-1.5 text-xs text-danger hover:border-transparent hover:bg-danger-soft`,
-  btnActive: 'border-ink bg-ink text-white hover:border-ink hover:bg-ink hover:text-white',
+  btnActive: `${btnBase} border-ink bg-ink px-2.75 py-1.5 text-xs text-white hover:border-ink hover:bg-ink hover:text-white`,
   tag: `${tagBase} bg-pale-yellow text-pale-yellow-ink`,
   tagBlue: `${tagBase} bg-pale-blue text-pale-blue-ink`,
   tagGreen: `${tagBase} bg-pale-green text-pale-green-ink`,
@@ -84,11 +84,11 @@ export const ui = {
   srFile: 'pointer-events-none absolute h-px w-px opacity-0',
 };
 
+export function choiceClass(active: boolean): string {
+  return active ? ui.btnActive : ui.btnGhostSm;
+}
+
 export function tagClass(kind: string, inline = false): string {
   const base = kind === 'blue' ? ui.tagBlue : kind === 'green' ? ui.tagGreen : kind === 'red' ? ui.tagRed : ui.tag;
   return inline ? `${base} ${ui.tagInline}` : base;
-}
-
-export function cn(...parts: Array<string | false | null | undefined>): string {
-  return parts.filter(Boolean).join(' ');
 }

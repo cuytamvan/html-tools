@@ -6,7 +6,7 @@ import { useI18n } from '@/i18n';
 import ToolLayout from '@/components/ToolLayout.vue';
 import { useToast } from '@/composables/useToast';
 import { downloadFile } from '@/lib/escape';
-import { cn, ui } from '@/lib/ui';
+import { choiceClass, ui } from '@/lib/ui';
 
 type EccLevel = 'L' | 'M' | 'Q' | 'H';
 
@@ -110,7 +110,7 @@ async function copyPng() {
                   v-for="level in ECC_LEVELS"
                   :key="level"
                   type="button"
-                  :class="cn(ui.btnGhostSm, ecc === level && ui.btnActive)"
+                  :class="choiceClass(ecc === level)"
                   @click="ecc = level"
                 >
                   {{ level }}
@@ -125,7 +125,7 @@ async function copyPng() {
                   v-for="px in SIZES"
                   :key="px"
                   type="button"
-                  :class="cn(ui.btnGhostSm, size === px && ui.btnActive)"
+                  :class="choiceClass(size === px)"
                   @click="size = px"
                 >
                   {{ px }}
@@ -140,7 +140,7 @@ async function copyPng() {
                   v-for="m in MARGINS"
                   :key="m"
                   type="button"
-                  :class="cn(ui.btnGhostSm, margin === m && ui.btnActive)"
+                  :class="choiceClass(margin === m)"
                   @click="margin = m"
                 >
                   {{ m }}
