@@ -368,10 +368,10 @@ function highlight(escapedText: string, query: string) {
   return escapedText.replace(re, (m) => '<mark>' + m + '</mark>');
 }
 
-function valueToText(v: unknown) {
+function valueToText(v: unknown, pretty = false) {
   if (v === undefined) return '';
   if (v === null) return 'null';
-  if (typeof v === 'object') return JSON.stringify(v);
+  if (typeof v === 'object') return JSON.stringify(v, pretty ? null : undefined, pretty ? 2 : undefined);
   return String(v);
 }
 
@@ -405,7 +405,7 @@ const tableView = computed(() => {
     const cells: TableCell[] = columns.map((col) => {
       const raw = item[col];
       const isObj = raw !== null && typeof raw === 'object';
-      const text = valueToText(raw);
+      const text = valueToText(raw, isObj);
       const escaped = escapeHtml(text);
       return {
         html: query ? highlight(escaped, query) : escaped,
@@ -558,10 +558,17 @@ if (restored) {
             <td
               v-for="(cell, ci) in row.cells"
               :key="ci"
-              :class="[ui.td, cell.isObj ? ui.tdJson : ui.tdValue]"
+              :class="[ui.td, cell.isObj ? 'min-w-52 max-w-96' : ui.tdValue]"
               :title="cell.isObj ? undefined : cell.title"
-              v-html="cell.html"
-            ></td>
+            >
+              <pre
+                v-if="cell.isObj"
+                :class="ui.tdJsonPre"
+                v-html="cell.html"
+                @click.stop
+              ></pre>
+              <span v-else v-html="cell.html"></span>
+            </td>
           </tr>
         </tbody>
       </table>

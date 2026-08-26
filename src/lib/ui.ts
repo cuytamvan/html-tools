@@ -63,6 +63,8 @@ export const ui = {
   tdIdx: 'font-mono text-xs text-muted tabular-nums',
   tdValue: 'overflow-hidden text-ellipsis whitespace-nowrap',
   tdJson: 'font-mono text-muted',
+  tdJsonPre:
+    'm-0 max-h-40 max-w-full cursor-text overflow-auto rounded-sm border border-line bg-bone px-2.5 py-2 font-mono text-xs leading-[1.5] whitespace-pre text-muted',
   empty: 'px-6 py-16 text-center text-sm text-muted',
   resultList: 'border-t border-line first:border-t-0',
   resultRow: 'flex items-baseline justify-between gap-4 border-b border-line py-3.5 text-sm last:border-b-0',
