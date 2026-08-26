@@ -490,8 +490,13 @@ if (restored) {
             <button :class="ui.btnGhost" type="button" @click="loadSample">{{ t('common.loadSample') }}</button>
           </div>
           <div :class="ui.row">
-            <span :class="ui.meta"><b class="font-mono text-xs font-semibold text-ink">{{ dataset.length }}</b> {{ t('jsonSearcher.rowsStoredSuffix') }}</span>
-            <button :class="ui.btnDangerSm" type="button" @click="requestClear">{{ t('jsonSearcher.clearAll') }}</button>
+            <span :class="ui.meta"
+              ><b class="font-mono text-xs font-semibold text-ink">{{ dataset.length }}</b>
+              {{ t('jsonSearcher.rowsStoredSuffix') }}</span
+            >
+            <button :class="ui.btnDangerSm" type="button" @click="requestClear">
+              {{ t('jsonSearcher.clearAll') }}
+            </button>
           </div>
         </div>
         <div v-if="errorMsg" :class="ui.error">{{ errorMsg }}</div>
@@ -508,7 +513,9 @@ if (restored) {
             :class="ui.search"
             :placeholder="t('jsonSearcher.searchPlaceholder')"
           />
-          <span :class="ui.badge">{{ t('jsonSearcher.rowsMatch', { matched: tableView.matched, total: tableView.total }) }}</span>
+          <span :class="ui.badge">{{
+            t('jsonSearcher.rowsMatch', { matched: tableView.matched, total: tableView.total })
+          }}</span>
         </div>
         <div :class="ui.row">
           <span :class="[ui.meta, 'mr-0.5']">{{ t('jsonSearcher.searchIn') }}</span>
@@ -520,7 +527,9 @@ if (restored) {
                 :value="level.value"
                 @change="onFilterChange(i, ($event.target as HTMLSelectElement).value)"
               >
-                <option value="__STOP__">{{ i === 0 ? t('jsonSearcher.allFields') : t('jsonSearcher.searchHere') }}</option>
+                <option value="__STOP__">
+                  {{ i === 0 ? t('jsonSearcher.allFields') : t('jsonSearcher.searchHere') }}
+                </option>
                 <option v-for="k in level.keys" :key="k" :value="k">{{ k }}</option>
               </select>
             </template>
@@ -564,12 +573,18 @@ if (restored) {
         <div :class="ui.modal">
           <h3 :class="ui.modalTitle">{{ t('jsonSearcher.replaceTitle') }}</h3>
           <i18n-t scope="global" keypath="jsonSearcher.replaceBody" tag="p" :class="ui.modalCopy">
-            <template #replace><b>{{ t('jsonSearcher.replace') }}</b></template>
-            <template #merge><b>{{ t('jsonSearcher.merge') }}</b></template>
+            <template #replace
+              ><b>{{ t('jsonSearcher.replace') }}</b></template
+            >
+            <template #merge
+              ><b>{{ t('jsonSearcher.merge') }}</b></template
+            >
           </i18n-t>
           <div :class="ui.modalActions">
             <button :class="ui.btnGhostSm" type="button" @click="cancelReplace">{{ t('common.cancel') }}</button>
-            <button :class="ui.btnDangerSm" type="button" @click="confirmReplace">{{ t('jsonSearcher.replace') }}</button>
+            <button :class="ui.btnDangerSm" type="button" @click="confirmReplace">
+              {{ t('jsonSearcher.replace') }}
+            </button>
             <button :class="ui.btnPrimarySm" type="button" @click="confirmMerge">{{ t('jsonSearcher.merge') }}</button>
           </div>
         </div>
@@ -581,7 +596,9 @@ if (restored) {
           <p :class="ui.modalCopy">{{ t('jsonSearcher.clearBody') }}</p>
           <div :class="ui.modalActions">
             <button :class="ui.btnGhostSm" type="button" @click="cancelClear">{{ t('common.cancel') }}</button>
-            <button :class="ui.btnDangerSm" type="button" @click="confirmClear">{{ t('jsonSearcher.clearConfirm') }}</button>
+            <button :class="ui.btnDangerSm" type="button" @click="confirmClear">
+              {{ t('jsonSearcher.clearConfirm') }}
+            </button>
           </div>
         </div>
       </div>
@@ -590,7 +607,11 @@ if (restored) {
         <div :class="ui.modalWide">
           <h3 :class="ui.modalTitle">{{ t('jsonSearcher.detailTitle') }}</h3>
           <p :class="ui.modalCopy">{{ jsonModalMeta }}</p>
-          <pre ref="jsonModalPre" :class="[ui.regexPreview, 'mb-4 max-h-[60vh]']" v-html="jsonModalHtml"></pre>
+          <pre
+            ref="jsonModalPre"
+            :class="[ui.regexPreview, 'mb-4 max-h-[60vh] overflow-auto']"
+            v-html="jsonModalHtml"
+          ></pre>
           <div :class="ui.modalActions">
             <button :class="ui.btnGhostSm" type="button" @click="copyJson">{{ t('common.copy') }}</button>
             <button :class="ui.btnPrimarySm" type="button" @click="closeJsonModal">{{ t('common.close') }}</button>
