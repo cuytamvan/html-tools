@@ -67,9 +67,7 @@ const encodeState = computed(() => {
       return { hash: '', display: '—', note: t('hashids.cannotEncode') };
     }
     const note =
-      parsed.numbers.length === 1
-        ? t('hashids.encodedOne')
-        : t('hashids.encodedMany', { n: parsed.numbers.length });
+      parsed.numbers.length === 1 ? t('hashids.encodedOne') : t('hashids.encodedMany', { n: parsed.numbers.length });
     return { hash, display: hash, note };
   } catch (err) {
     return { hash: '', display: '—', note: (err as Error).message || t('hashids.encodeFail') };
@@ -93,8 +91,7 @@ const decodeState = computed(() => {
       };
     }
     const json = '[' + numbers.map(stringifyNumber).join(', ') + ']';
-    const note =
-      numbers.length === 1 ? t('hashids.decodedOne') : t('hashids.decodedMany', { n: numbers.length });
+    const note = numbers.length === 1 ? t('hashids.decodedOne') : t('hashids.decodedMany', { n: numbers.length });
     return {
       json,
       numbers: numbers.map(stringifyNumber).join(', '),
@@ -126,38 +123,45 @@ async function copyJson() {
 
 <template>
   <ToolLayout :title="t('tools.hashids.title')" :description="t('hashids.lead')">
-    <div :class="ui.split">
-      <section class="reveal col-span-full">
-        <details class="collapse">
-          <summary>{{ t('common.settings') }}</summary>
-          <div :class="ui.form">
-            <div>
-              <label :class="ui.label" for="salt">Salt</label>
-              <input
-                id="salt"
-                v-model="salt"
-                type="text"
-                :placeholder="t('hashids.emptyPlaceholder')"
-                autocomplete="off"
-                spellcheck="false"
-                :class="ui.input"
-              />
-              <p :class="ui.hint">{{ t('hashids.saltHint') }}</p>
-            </div>
-            <div>
-              <label :class="ui.label" for="minLength">{{ t('hashids.minLength') }}</label>
-              <input id="minLength" v-model="minLength" type="number" min="0" step="1" :class="ui.input" />
-              <p :class="ui.hint">{{ t('hashids.minLengthHint') }}</p>
-            </div>
-            <div :class="ui.fieldFull">
-              <label :class="ui.label" for="alphabet">Alphabet</label>
-              <input id="alphabet" v-model="alphabet" type="text" autocomplete="off" spellcheck="false" :class="ui.input" />
-              <p :class="ui.hint">{{ t('hashids.alphabetHint') }}</p>
-            </div>
+    <section :class="[ui.panel, 'reveal']">
+      <p :class="ui.panelTitle">{{ t('common.settings') }}</p>
+      <div :class="ui.card">
+        <div :class="ui.form">
+          <div>
+            <label :class="ui.label" for="salt">Salt</label>
+            <input
+              id="salt"
+              v-model="salt"
+              type="text"
+              :placeholder="t('hashids.emptyPlaceholder')"
+              autocomplete="off"
+              spellcheck="false"
+              :class="ui.input"
+            />
+            <p :class="ui.hint">{{ t('hashids.saltHint') }}</p>
           </div>
-        </details>
-      </section>
+          <div>
+            <label :class="ui.label" for="minLength">{{ t('hashids.minLength') }}</label>
+            <input id="minLength" v-model="minLength" type="number" min="0" step="1" :class="ui.input" />
+            <p :class="ui.hint">{{ t('hashids.minLengthHint') }}</p>
+          </div>
+          <div :class="ui.fieldFull">
+            <label :class="ui.label" for="alphabet">Alphabet</label>
+            <input
+              id="alphabet"
+              v-model="alphabet"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              :class="ui.input"
+            />
+            <p :class="ui.hint">{{ t('hashids.alphabetHint') }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
+    <div :class="ui.split">
       <section :class="[ui.card, 'reveal']">
         <p :class="ui.panelTitle">Encode</p>
         <div>
