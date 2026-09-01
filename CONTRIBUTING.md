@@ -26,6 +26,14 @@ bunx vue-tsc -p tsconfig.app.json --noEmit
 bunx vite build
 ```
 
+Chrome extension bundle:
+
+```bash
+bun run build:extension
+```
+
+Then load the `dist-extension` folder unpacked at `chrome://extensions`.
+
 Docker image (nginx serves `dist` on port 80):
 
 ```bash

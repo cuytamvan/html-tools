@@ -5,10 +5,12 @@ import { useI18n } from '@/i18n';
 import LocaleSelect from '@/components/LocaleSelect.vue';
 import { useLandingMotion } from '@/composables/useLandingMotion';
 import { tools } from '@/lib/tools';
+import { isExtPopup } from '@/lib/extension';
 import { tagClass, ui } from '@/lib/ui';
 
 const { t } = useI18n();
 const query = ref('');
+const isExtension = location.protocol === 'chrome-extension:';
 
 useLandingMotion();
 
@@ -53,7 +55,7 @@ function scrollToId(id: string) {
     </div>
   </header>
 
-  <div :class="ui.wrapLanding">
+  <div v-if="!isExtPopup" :class="ui.wrapLanding">
     <section
       class="landing-hero grid min-h-auto grid-cols-1 items-center gap-10 py-16 hero:min-h-[calc(100vh-72px)] hero:grid-cols-[1.15fr_0.85fr] hero:gap-16 hero:py-32"
     >
@@ -95,7 +97,11 @@ function scrollToId(id: string) {
     </section>
   </div>
 
-  <section class="w-full max-w-7xl mx-auto border-y border-line px-5 py-24 tool:px-8 hero:px-10 hero:py-32" id="tools">
+  <section
+    class="w-full max-w-7xl mx-auto border-y border-line px-5 py-24 tool:px-8 hero:px-10 hero:py-32"
+    :class="isExtPopup && 'border-b-0'"
+    id="tools"
+  >
     <div class="landing-section-head" :class="ui.sectionHead">
       <div>
         <h2 :class="ui.sectionTitle">{{ t('landing.toolsTitle') }}</h2>
@@ -134,13 +140,13 @@ function scrollToId(id: string) {
     <p v-if="!filteredTools.length" :class="ui.empty">{{ t('landing.toolsEmpty') }}</p>
   </section>
 
-  <div :class="ui.wrapLanding">
+  <div v-if="!isExtPopup" :class="ui.wrapLanding">
     <section class="py-24 hero:py-32" id="cara-pakai">
       <div class="landing-section-head" :class="ui.sectionHead">
         <h2 :class="ui.sectionTitle">{{ t('landing.howtoTitle') }}</h2>
         <p class="m-0 max-w-[28em] text-sm leading-[1.6] text-muted">{{ t('landing.howtoLead') }}</p>
       </div>
-      <div class="howto-grid grid grid-cols-1 gap-4 hero:grid-cols-[1.15fr_0.85fr]">
+      <div class="howto-grid grid grid-cols-1 gap-4 hero:grid-cols-2">
         <article class="howto-card bg-paper" :class="ui.howtoCard">
           <h3 :class="[ui.cardTitle, 'mb-2.5']">{{ t('landing.dockerTitle') }}</h3>
           <i18n-t scope="global" keypath="landing.dockerBody" tag="p" class="m-0 max-w-[42em] text-sm leading-[1.6] text-muted">
@@ -181,7 +187,7 @@ function scrollToId(id: string) {
 <span class="tok-cmd">bun</span> <span class="tok-sub">install</span>
 <span class="tok-cmd">bun</span> <span class="tok-sub">run</span> <span class="tok-str">dev</span></pre>
         </article>
-        <article class="howto-card col-span-1 bg-surface hero:col-span-full" :class="ui.howtoCard">
+        <article class="howto-card bg-paper" :class="ui.howtoCard">
           <h3 :class="[ui.cardTitle, 'mb-2.5']">{{ t('landing.pwaTitle') }}</h3>
           <p class="m-0 max-w-[42em] text-sm leading-[1.6] text-muted">{{ t('landing.pwaBody') }}</p>
           <ol class="mt-5 list-none p-0">
@@ -212,6 +218,31 @@ function scrollToId(id: string) {
                 </template>
                 <template #action>
                   <em class="font-serif text-ink italic">{{ t('landing.pwaDock') }}</em>
+                </template>
+              </i18n-t>
+            </li>
+          </ol>
+        </article>
+        <article v-if="!isExtension" class="howto-card bg-surface" :class="ui.howtoCard">
+          <h3 :class="[ui.cardTitle, 'mb-2.5']">{{ t('landing.extensionTitle') }}</h3>
+          <p class="m-0 max-w-[42em] text-sm leading-[1.6] text-muted">{{ t('landing.extensionBody') }}</p>
+          <pre
+            :class="ui.codeSnippet"
+          ><span class="tok-cmd">bun</span> <span class="tok-sub">run</span> <span class="tok-str">build:extension</span></pre>
+          <ol class="mt-5 list-none p-0">
+            <li class="border-t border-line py-3.5 text-sm leading-[1.55] text-muted last:pb-0">
+              <i18n-t scope="global" keypath="landing.extensionChrome" tag="span">
+                <template #browser>
+                  <b class="font-semibold text-ink">{{ t('landing.chromeEdge') }}</b>
+                </template>
+                <template #page>
+                  <span class="font-mono">chrome://extensions</span>
+                </template>
+                <template #action>
+                  <em class="font-serif text-ink italic">{{ t('landing.extensionAction') }}</em>
+                </template>
+                <template #folder>
+                  <span class="font-mono">dist-extension</span>
                 </template>
               </i18n-t>
             </li>

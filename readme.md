@@ -60,6 +60,14 @@ Stop the server with `Ctrl+C`, or:
 docker stop html-tools
 ```
 
+## Chrome extension
+
+```bash
+bun run build:extension
+```
+
+In Chrome, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and select the `dist-extension` folder. The toolbar icon opens a popup with the tools.
+
 ## Pull from GHCR
 
 ```bash

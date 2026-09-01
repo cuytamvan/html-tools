@@ -182,3 +182,34 @@ details.collapse[open] > summary::before {
 .meta {
   @apply text-ui text-muted;
 }
+
+html.ext-popup,
+html.ext-popup body {
+  width: 760px;
+  min-width: 760px;
+  overflow-x: hidden;
+}
+html.ext-popup .ambient,
+html.ext-popup .ambient-blob {
+  display: none;
+}
+html.ext-popup .ext-popup-wrap {
+  padding: 1.25rem 1.25rem 1.75rem;
+}
+html.ext-popup header.reveal {
+  margin-bottom: 1.25rem;
+}
+html.ext-popup #tools {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+html.ext-popup .landing-hero {
+  min-height: 0;
+  padding-top: 1.5rem;
+  padding-bottom: 1.25rem;
+  gap: 1rem;
+}
+html.ext-popup .tool-item {
+  min-height: 8.5rem;
+  padding: 1.25rem;
+}

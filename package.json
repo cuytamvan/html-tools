@@ -1,11 +1,12 @@
 {
   "name": "ui",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.5.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
+    "build:extension": "vue-tsc && vite build --outDir dist-extension && bun scripts/pack-extension.ts",
     "preview": "vite preview"
   },
   "dependencies": {

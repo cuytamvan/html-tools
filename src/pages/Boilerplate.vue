@@ -23,6 +23,7 @@ const WATCH_MS = 800;
 
 const { t } = useI18n();
 const { message: toastMsg, visible: toastVisible, show: showToast } = useToast();
+const sampleHref = `${import.meta.env.BASE_URL}data/boilerplates.example.json`;
 
 const fileSource = ref<HTMLInputElement | null>(null);
 const isDrop = ref(false);
@@ -410,7 +411,7 @@ onUnmounted(() => {
         </p>
         <div :class="[ui.row, 'mt-3.5']">
           <button :class="ui.btnPrimary" type="button" @click="openFilePicker">{{ t('boilerplate.chooseFolder') }}</button>
-          <a :class="ui.btnGhost" href="/data/boilerplates.example.json" download="boilerplates.json">{{ t('boilerplate.downloadSample') }}</a>
+          <a :class="ui.btnGhost" :href="sampleHref" download="boilerplates.json">{{ t('boilerplate.downloadSample') }}</a>
           <button :class="ui.btnGhost" type="button" :hidden="clearSourceHidden" @click="onClearSource">{{ t('boilerplate.clearSource') }}</button>
         </div>
         <input ref="fileSource" type="file" :class="ui.srFile" accept=".json" @change="onFileChange" />

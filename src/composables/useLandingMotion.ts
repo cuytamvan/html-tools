@@ -4,6 +4,7 @@ import { onMounted, onUnmounted } from 'vue';
 
 export function useLandingMotion(): void {
   onMounted(() => {
+    if (document.documentElement.classList.contains('ext-popup')) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) return;
 

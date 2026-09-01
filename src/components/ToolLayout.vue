@@ -3,6 +3,7 @@ import { useI18n } from '@/i18n';
 
 import LocaleSelect from '@/components/LocaleSelect.vue';
 import { useReveal } from '@/composables/useReveal';
+import { isExtPopup } from '@/lib/extension';
 import { ui } from '@/lib/ui';
 
 defineProps<{
@@ -16,7 +17,7 @@ useReveal();
 
 <template>
   <div class="ambient" aria-hidden="true"></div>
-  <div :class="ui.wrap">
+  <div :class="[ui.wrap, isExtPopup && 'ext-popup-wrap']">
     <header class="reveal mb-16">
       <div class="mb-5 flex items-center justify-between gap-3">
         <router-link :class="ui.btnGhostSm" to="/">{{ t('common.back') }}</router-link>
