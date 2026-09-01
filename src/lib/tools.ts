@@ -10,7 +10,8 @@ export type ToolId =
   | 'regexTester'
   | 'userAgent'
   | 'boilerplate'
-  | 'qrCode';
+  | 'qrCode'
+  | 'zipViewer';
 
 export type Tool = {
   id: ToolId;
@@ -30,4 +31,5 @@ export const tools: Tool[] = [
   { id: 'userAgent', path: '/user-agent', tag: 'Web', tagClass: 'green' },
   { id: 'boilerplate', path: '/boilerplate', tag: 'File', tagClass: 'red' },
   { id: 'qrCode', path: '/qr-code', tag: 'QR', tagClass: 'green' },
+  { id: 'zipViewer', path: '/zip-viewer', tag: 'Zip', tagClass: 'red' },
 ];

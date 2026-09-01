@@ -41,6 +41,7 @@ Open http://localhost:5173/
 - http://localhost:5173/#/user-agent
 - http://localhost:5173/#/boilerplate
 - http://localhost:5173/#/qr-code
+- http://localhost:5173/#/zip-viewer
 
 ## Run with Docker (nginx)
 
