@@ -9,6 +9,7 @@ import { ui } from '@/lib/ui';
 defineProps<{
   title: string;
   description?: string;
+  compact?: boolean;
 }>();
 
 const { t } = useI18n();
@@ -17,9 +18,9 @@ useReveal();
 
 <template>
   <div class="ambient" aria-hidden="true"></div>
-  <div :class="[ui.wrap, isExtPopup && 'ext-popup-wrap']">
-    <header class="reveal mb-16">
-      <div class="mb-5 flex items-center justify-between gap-3">
+  <div :class="[ui.wrap, isExtPopup && 'ext-popup-wrap', compact && 'py-10 tool:py-14 tool:pb-20']">
+    <header :class="['reveal', compact ? 'mb-8' : 'mb-16']">
+      <div :class="['flex items-center justify-between gap-3', compact ? 'mb-3' : 'mb-5']">
         <router-link :class="ui.btnGhostSm" to="/">{{ t('common.back') }}</router-link>
         <LocaleSelect />
       </div>

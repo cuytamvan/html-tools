@@ -11,7 +11,9 @@ export type ToolId =
   | 'userAgent'
   | 'boilerplate'
   | 'qrCode'
-  | 'zipViewer';
+  | 'zipViewer'
+  | 'notes'
+  | 'markdownReview';
 
 export type Tool = {
   id: ToolId;
@@ -32,4 +34,6 @@ export const tools: Tool[] = [
   { id: 'boilerplate', path: '/boilerplate', tag: 'File', tagClass: 'red' },
   { id: 'qrCode', path: '/qr-code', tag: 'QR', tagClass: 'green' },
   { id: 'zipViewer', path: '/zip-viewer', tag: 'Zip', tagClass: 'red' },
+  { id: 'notes', path: '/notes', tag: 'Note', tagClass: 'green' },
+  { id: 'markdownReview', path: '/markdown-review', tag: 'MD', tagClass: 'blue' },
 ];

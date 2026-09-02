@@ -42,6 +42,8 @@ Open http://localhost:5173/
 - http://localhost:5173/#/boilerplate
 - http://localhost:5173/#/qr-code
 - http://localhost:5173/#/zip-viewer
+- http://localhost:5173/#/notes
+- http://localhost:5173/#/markdown-review
 
 ## Run with Docker (nginx)
 

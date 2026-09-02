@@ -15,6 +15,9 @@ export const Router = createRouter({
     { path: '/boilerplate', component: () => import('@/pages/Boilerplate.vue'), meta: { titleKey: 'tools.boilerplate.title' } },
     { path: '/qr-code', component: () => import('@/pages/QrCode.vue'), meta: { titleKey: 'tools.qrCode.title' } },
     { path: '/zip-viewer', component: () => import('@/pages/ZipViewer.vue'), meta: { titleKey: 'tools.zipViewer.title' } },
+    { path: '/notes', component: () => import('@/pages/NotesList.vue'), meta: { titleKey: 'tools.notes.title' } },
+    { path: '/notes/:id', component: () => import('@/pages/NoteDetail.vue'), meta: { titleKey: 'tools.notes.title' } },
+    { path: '/markdown-review', component: () => import('@/pages/MarkdownReview.vue'), meta: { titleKey: 'tools.markdownReview.title' } },
   ],
   scrollBehavior(to) {
     if (to.hash) {
