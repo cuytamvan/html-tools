@@ -249,7 +249,6 @@ async function exportPdf() {
 .md-markdown :deep(h3),
 .md-markdown :deep(h4) {
   margin: 0.75rem 0 0.375rem;
-  font-family: var(--font-serif);
   font-weight: 400;
   letter-spacing: -0.02em;
   color: var(--color-ink);
