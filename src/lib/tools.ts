@@ -13,7 +13,8 @@ export type ToolId =
   | 'qrCode'
   | 'zipViewer'
   | 'notes'
-  | 'markdownReview';
+  | 'markdownReview'
+  | 'traefikLabels';
 
 export type Tool = {
   id: ToolId;
@@ -36,4 +37,5 @@ export const tools: Tool[] = [
   { id: 'zipViewer', path: '/zip-viewer', tag: 'Zip', tagClass: 'red' },
   { id: 'notes', path: '/notes', tag: 'Note', tagClass: 'green' },
   { id: 'markdownReview', path: '/markdown-review', tag: 'MD', tagClass: 'blue' },
+  { id: 'traefikLabels', path: '/traefik-labels', tag: 'Docker', tagClass: 'red' },
 ];

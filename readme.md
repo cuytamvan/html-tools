@@ -44,6 +44,7 @@ Open http://localhost:5173/
 - http://localhost:5173/#/zip-viewer
 - http://localhost:5173/#/notes
 - http://localhost:5173/#/markdown-review
+- http://localhost:5173/#/traefik-labels
 
 ## Run with Docker (nginx)
 

@@ -18,6 +18,7 @@ export const Router = createRouter({
     { path: '/notes', component: () => import('@/pages/NotesList.vue'), meta: { titleKey: 'tools.notes.title' } },
     { path: '/notes/:id', component: () => import('@/pages/NoteDetail.vue'), meta: { titleKey: 'tools.notes.title' } },
     { path: '/markdown-review', component: () => import('@/pages/MarkdownReview.vue'), meta: { titleKey: 'tools.markdownReview.title' } },
+    { path: '/traefik-labels', component: () => import('@/pages/TraefikLabels.vue'), meta: { titleKey: 'tools.traefikLabels.title' } },
   ],
   scrollBehavior(to) {
     if (to.hash) {
