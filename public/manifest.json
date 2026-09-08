@@ -11,16 +11,10 @@
   "lang": "id",
   "icons": [
     {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
+      "src": "favicon-96x96.png",
+      "sizes": "96x96",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
@@ -28,55 +22,100 @@
       "name": "JSON Searcher",
       "short_name": "JSON",
       "url": "./#/json-searcher",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "favicon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "JSON Diff",
       "short_name": "Diff",
       "url": "./#/json-diff",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "favicon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "JSON ke Tipe",
       "short_name": "Tipe",
       "url": "./#/json-types",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "favicon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "CSV / JSON",
       "short_name": "CSV",
       "url": "./#/csv-json",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "favicon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Perhitungan Lembur",
       "short_name": "Lembur",
       "url": "./#/overtime",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "favicon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Hashids",
       "short_name": "Hashids",
       "url": "./#/hashids",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "favicon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Regex Tester",
       "short_name": "Regex",
       "url": "./#/regex-tester",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "favicon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "User Agent Parser",
       "short_name": "UA",
       "url": "./#/user-agent",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "favicon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Boilerplate",
       "short_name": "Boilerplate",
       "url": "./#/boilerplate",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "favicon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }
