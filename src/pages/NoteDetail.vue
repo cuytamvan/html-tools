@@ -208,6 +208,7 @@ watch(
           :default-tab="draft.content.trim() ? 'review' : 'editor'"
           @exported="showToast(t('markdownEditor.exportPdfDone'))"
           @export-failed="showToast(t('markdownEditor.exportPdfFail'))"
+          @pretty-printed="showToast(t('markdownEditor.prettyPrintDone'))"
         />
       </section>
 

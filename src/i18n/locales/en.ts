@@ -477,6 +477,8 @@ export default {
     parsing: 'Rendering…',
     exportPdf: 'Export PDF',
     exportingPdf: 'Exporting…',
+    prettyPrint: 'Pretty-print',
+    prettyPrintDone: 'Markdown formatted.',
     exportPdfDone: 'PDF downloaded.',
     exportPdfFail: 'PDF export failed.',
   },

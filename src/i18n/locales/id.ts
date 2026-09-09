@@ -477,6 +477,8 @@ export default {
     parsing: 'Merender…',
     exportPdf: 'Export PDF',
     exportingPdf: 'Mengekspor…',
+    prettyPrint: 'Pretty-print',
+    prettyPrintDone: 'Markdown diformat.',
     exportPdfDone: 'PDF berhasil diunduh.',
     exportPdfFail: 'Gagal mengekspor PDF.',
   },

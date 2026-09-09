@@ -66,6 +66,7 @@ async function copySource() {
         :min-height="420"
         @exported="showToast(t('markdownEditor.exportPdfDone'))"
         @export-failed="showToast(t('markdownEditor.exportPdfFail'))"
+        @pretty-printed="showToast(t('markdownEditor.prettyPrintDone'))"
       />
     </section>
 

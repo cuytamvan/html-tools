@@ -4,6 +4,7 @@ import type { MarkdownDocument as MarkdownDocumentType } from 'comark';
 import { computed, nextTick, ref, watch } from 'vue';
 
 import { useI18n } from '@/i18n';
+import { prettyPrintMarkdown } from '@/lib/markdownPretty';
 import { parseNoteMarkdown } from '@/lib/noteMarkdown';
 
 const content = defineModel<string>({ required: true });
@@ -27,6 +28,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   exported: [];
   exportFailed: [];
+  prettyPrinted: [];
 }>();
 
 const { t } = useI18n();
@@ -40,6 +42,7 @@ const exportHostRef = ref<HTMLElement | null>(null);
 const reviewContent = computed(() => content.value);
 const panelStyle = computed(() => ({ minHeight: `${props.minHeight}px` }));
 const canExport = computed(() => Boolean(content.value.trim()) && !exportingPdf.value);
+const canPrettyPrint = computed(() => Boolean(content.value.trim()));
 
 let parseSeq = 0;
 
@@ -99,6 +102,14 @@ async function exportPdf() {
     exportDoc.value = null;
   }
 }
+
+function prettyPrint() {
+  const trimmed = content.value.trim();
+  if (!trimmed) return;
+  content.value = prettyPrintMarkdown(content.value);
+  activeTab.value = 'editor';
+  emit('prettyPrinted');
+}
 </script>
 
 <template>
@@ -122,9 +133,14 @@ async function exportPdf() {
           {{ t('markdownEditor.tabReview') }}
         </button>
       </div>
-      <button v-if="showExport" type="button" class="md-export" :disabled="!canExport" @click="exportPdf">
-        {{ exportingPdf ? t('markdownEditor.exportingPdf') : t('markdownEditor.exportPdf') }}
-      </button>
+      <div v-if="showExport" class="flex items-center gap-1.5">
+        <button type="button" class="md-export" :disabled="!canPrettyPrint" @click="prettyPrint">
+          {{ t('markdownEditor.prettyPrint') }}
+        </button>
+        <button type="button" class="md-export" :disabled="!canExport" @click="exportPdf">
+          {{ exportingPdf ? t('markdownEditor.exportingPdf') : t('markdownEditor.exportPdf') }}
+        </button>
+      </div>
     </div>
 
     <textarea
