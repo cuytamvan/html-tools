@@ -7,6 +7,7 @@ export const ui = {
   wrap: 'relative z-[1] mx-auto max-w-5xl px-5 py-16 tool:px-6 tool:py-24 tool:pb-32',
   wrapLanding: 'relative z-[1] mx-auto max-w-5xl px-5 py-0 tool:px-6',
   card: 'rounded-md border border-line bg-surface p-8',
+  cardNoPadding: 'rounded-md border border-line bg-surface',
   panel: 'border-t border-line py-12 first-of-type:border-t-0 first-of-type:pt-0',
   panelTitle: 'mb-4 text-2xs font-semibold uppercase tracking-kicker text-muted',
   pageTitle: 'mb-3 font-serif text-page font-normal tracking-display tool:text-display',

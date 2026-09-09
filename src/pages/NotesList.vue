@@ -260,7 +260,9 @@ onUnmounted(() => {
         <p :class="ui.meta">
           <template v-if="!folderReady">{{ t('notes.noFolder') }}</template>
           <i18n-t v-else scope="global" keypath="notes.usingFolder" tag="span">
-            <template #name><b>{{ folderLabel }}</b></template>
+            <template #name
+              ><b>{{ folderLabel }}</b></template
+            >
           </i18n-t>
         </p>
         <div :class="[ui.row, 'mt-3.5']">
@@ -284,8 +286,8 @@ onUnmounted(() => {
 
     <section :class="[ui.panel, 'reveal']">
       <p :class="ui.panelTitle">{{ t('notes.list') }}</p>
-      <div :class="ui.card">
-        <div v-if="folderReady" :class="[ui.rowBetween, 'mb-4']">
+      <div :class="ui.cardNoPadding">
+        <div v-if="folderReady" :class="[ui.rowBetween, 'mb-4 px-8 pt-4']">
           <div :class="[ui.row, 'min-w-0 flex-1']">
             <input
               v-model="query"
@@ -319,7 +321,7 @@ onUnmounted(() => {
             v-for="note in filteredNotes"
             :key="note.filename"
             :to="noteHref(note.filename)"
-            class="block border-b border-line py-4 text-inherit no-underline transition-colors last:border-b-0 hover:bg-paper"
+            class="block border-b border-line py-4 text-inherit no-underline transition-colors last:border-b-0 hover:bg-paper px-4"
           >
             <div :class="ui.rowBetween">
               <div class="min-w-0 flex-1">
