@@ -14,11 +14,13 @@ const props = withDefaults(
     minHeight?: number;
     exportFilename?: string;
     showExport?: boolean;
+    defaultTab?: 'editor' | 'review';
   }>(),
   {
     minHeight: 360,
     exportFilename: 'markdown.pdf',
     showExport: true,
+    defaultTab: 'editor',
   },
 );
 
@@ -28,7 +30,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const activeTab = ref<'editor' | 'review'>('editor');
+const activeTab = ref<'editor' | 'review'>(props.defaultTab);
 const parsedReview = ref<MarkdownDocumentType | null>(null);
 const parsingReview = ref(false);
 const exportingPdf = ref(false);

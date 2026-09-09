@@ -3,7 +3,7 @@ import { parseNoteFile, serializeNoteFile } from '@/lib/noteFrontmatter';
 
 const IDB_KEY = 'notes-folder';
 const CATEGORIES_FILE = 'categories.json';
-const WATCH_MS = 800;
+const WATCH_MS = 5000;
 
 export type NoteCategory = {
   id: string;
@@ -23,10 +23,15 @@ export type NoteInput = Pick<Note, 'title' | 'content' | 'category'>;
 
 type WatchListener = () => void;
 
+function isFileHandle(handle: FileSystemHandle): handle is FileSystemFileHandle {
+  return handle.kind === 'file';
+}
+
 let dirHandle: FileSystemDirectoryHandle | null = null;
 let watchTimer: ReturnType<typeof setInterval> | null = null;
 let fsObserver: FileSystemObserver | null = null;
 let watchBusy = false;
+let lastFolderSignature = '';
 const listeners = new Set<WatchListener>();
 
 function notifyChange() {
@@ -78,11 +83,28 @@ function startWatch() {
   }
 }
 
-async function refreshWatch() {
+async function folderSignature(): Promise<string> {
+  if (!dirHandle) return '';
+  const parts: string[] = [];
+  for await (const [name, handle] of dirHandle.entries()) {
+    if (!isFileHandle(handle)) continue;
+    if (!name.toLowerCase().endsWith('.md') && name !== CATEGORIES_FILE) continue;
+    const file = await handle.getFile();
+    parts.push(`${name}:${file.lastModified}:${file.size}`);
+  }
+  return parts.sort().join('|');
+}
+
+async function refreshWatch(force = false) {
   if (!dirHandle || watchBusy) return;
   watchBusy = true;
   try {
+    const signature = await folderSignature();
+    if (!force && signature === lastFolderSignature) return;
+    lastFolderSignature = signature;
     notifyChange();
+  } catch {
+    /* ignore read errors during polling */
   } finally {
     watchBusy = false;
   }
@@ -177,10 +199,11 @@ export async function connectNotesFolder(dir: FileSystemDirectoryHandle): Promis
   const ok = await ensureWritePermission(dir);
   if (!ok) throw new Error('Write permission denied');
   dirHandle = dir;
+  lastFolderSignature = '';
   await persistFileHandle(IDB_KEY, dir, CATEGORIES_FILE);
   await readCategoriesRaw();
   startWatch();
-  notifyChange();
+  await refreshWatch(true);
 }
 
 export async function restoreNotesFolder(): Promise<boolean> {
@@ -196,8 +219,10 @@ export async function restoreNotesFolder(): Promise<boolean> {
     const ok = await ensureWritePermission(dir);
     if (!ok) return false;
     dirHandle = dir;
+    lastFolderSignature = '';
     await readCategoriesRaw();
     startWatch();
+    await refreshWatch(true);
     return true;
   } catch {
     return false;
@@ -207,6 +232,7 @@ export async function restoreNotesFolder(): Promise<boolean> {
 export async function clearNotesFolder(): Promise<void> {
   stopWatch();
   dirHandle = null;
+  lastFolderSignature = '';
   await forgetFileHandle(IDB_KEY);
 }
 

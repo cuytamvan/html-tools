@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 
 import MarkdownEditorCard from '@/components/MarkdownEditorCard.vue';
 import ToolLayout from '@/components/ToolLayout.vue';
@@ -17,8 +17,6 @@ import {
   type NoteInput,
 } from '@/lib/notesFs';
 import { ui } from '@/lib/ui';
-
-const SAVE_MS = 5000;
 
 const { t } = useI18n();
 const route = useRoute();
@@ -136,20 +134,17 @@ async function onDelete() {
   }
 }
 
-let saveTimer: ReturnType<typeof setInterval> | null = null;
+onBeforeRouteLeave(async () => {
+  if (dirty.value) await persist(false);
+});
 
 onMounted(async () => {
   await Promise.all([loadCategories(), loadNote()]);
-  saveTimer = setInterval(() => {
-    void persist();
-  }, SAVE_MS);
   window.addEventListener('keydown', onKeydown);
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown);
-  if (saveTimer) clearInterval(saveTimer);
-  if (dirty.value) void persist();
 });
 
 watch(noteFilename, async () => {
@@ -165,11 +160,7 @@ watch(
 </script>
 
 <template>
-  <ToolLayout
-    compact
-    :title="draft.title.trim() || t('notes.untitled')"
-    :description="t('notes.detailLead')"
-  >
+  <ToolLayout compact :title="draft.title.trim() || t('notes.untitled')" :description="t('notes.detailLead')">
     <template #lead>
       <span>{{ t('notes.detailLead') }}</span>
       <span class="ml-3 font-mono text-2xs text-muted">{{ noteFilename }}</span>
@@ -214,6 +205,7 @@ watch(
           v-model="draft.content"
           :placeholder="t('notes.contentPlaceholder')"
           :export-filename="`${draft.title.trim() || noteFilename.replace(/\.md$/i, '')}.pdf`"
+          :default-tab="draft.content.trim() ? 'review' : 'editor'"
           @exported="showToast(t('markdownEditor.exportPdfDone'))"
           @export-failed="showToast(t('markdownEditor.exportPdfFail'))"
         />

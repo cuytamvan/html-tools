@@ -83,22 +83,26 @@ function noteHref(filename: string) {
   return `/notes/${encodeURIComponent(filename)}`;
 }
 
-async function refresh() {
+async function refresh(showLoading = true) {
   if (!folderReady.value) {
     notes.value = [];
     categories.value = [];
     loading.value = false;
     return;
   }
-  loading.value = true;
+  if (showLoading) loading.value = true;
   try {
     const [nextNotes, nextCategories] = await Promise.all([listNotes(), listCategories()]);
     notes.value = nextNotes;
     categories.value = nextCategories;
     folderLabel.value = getNotesFolderLabel();
   } finally {
-    loading.value = false;
+    if (showLoading) loading.value = false;
   }
+}
+
+function onVisibility() {
+  if (document.visibilityState === 'visible') void refresh(false);
 }
 
 async function connectFolder() {
@@ -232,12 +236,14 @@ onMounted(async () => {
   if (folderReady.value) folderLabel.value = getNotesFolderLabel();
   await refresh();
   stopWatch = onNotesFolderChange(() => {
-    void refresh();
+    void refresh(false);
   });
+  document.addEventListener('visibilitychange', onVisibility);
 });
 
 onUnmounted(() => {
   stopWatch?.();
+  document.removeEventListener('visibilitychange', onVisibility);
 });
 </script>
 
