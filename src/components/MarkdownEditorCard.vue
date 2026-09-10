@@ -265,9 +265,11 @@ function prettyPrint() {
 .md-markdown :deep(h1),
 .md-markdown :deep(h2),
 .md-markdown :deep(h3),
-.md-markdown :deep(h4) {
+.md-markdown :deep(h4),
+.md-markdown :deep(h5),
+.md-markdown :deep(h6) {
   margin: 0.75rem 0 0.375rem;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--color-ink);
 }
@@ -280,25 +282,69 @@ function prettyPrint() {
 .md-markdown :deep(h3) {
   font-size: 1.0625rem;
 }
+.md-markdown :deep(h4) {
+  font-size: 1rem;
+}
+.md-markdown :deep(h5) {
+  font-size: 0.9375rem;
+}
+.md-markdown :deep(h6) {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
 .md-markdown :deep(p),
 .md-markdown :deep(ul),
 .md-markdown :deep(ol),
 .md-markdown :deep(pre),
-.md-markdown :deep(blockquote) {
-  margin: 0 0 0.5rem;
+.md-markdown :deep(blockquote),
+.md-markdown :deep(table),
+.md-markdown :deep(hr),
+.md-markdown :deep(dl),
+.md-markdown :deep(figure) {
+  margin: 0 0 0.75rem;
 }
 .md-markdown :deep(ul),
 .md-markdown :deep(ol) {
-  padding-left: 1rem;
+  padding-left: 1.25rem;
 }
-
 .md-markdown :deep(ul) {
   list-style-type: disc;
 }
 .md-markdown :deep(ol) {
   list-style-type: decimal;
 }
-
+.md-markdown :deep(li + li) {
+  margin-top: 0.25rem;
+}
+.md-markdown :deep(li > ul),
+.md-markdown :deep(li > ol) {
+  margin: 0.25rem 0 0;
+}
+.md-markdown :deep(input[type='checkbox']) {
+  margin: 0 0.375rem 0 0;
+  accent-color: var(--color-ink);
+}
+.md-markdown :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.md-markdown :deep(th),
+.md-markdown :deep(td) {
+  border: 1px solid var(--color-line);
+  padding: 0.4375rem 0.625rem;
+  text-align: left;
+  vertical-align: top;
+}
+.md-markdown :deep(th) {
+  background: var(--color-paper);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.md-markdown :deep(tbody tr:nth-child(even) td) {
+  background: var(--color-bone);
+}
 .md-markdown :deep(code) {
   border-radius: 4px;
   background: var(--color-bone);
@@ -310,7 +356,7 @@ function prettyPrint() {
   overflow: auto;
   border: 1px solid var(--color-line);
   border-radius: 6px;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.75rem;
 }
 .md-markdown :deep(pre:not(.shiki)) {
   background: var(--color-bone);
@@ -330,10 +376,73 @@ function prettyPrint() {
 }
 .md-markdown :deep(blockquote) {
   border-left: 3px solid var(--color-line-strong);
-  padding-left: 0.625rem;
+  border-radius: 0 6px 6px 0;
+  background: var(--color-paper);
+  padding: 0.625rem 0.875rem;
+  font-style: italic;
   color: var(--color-muted);
 }
+.md-markdown :deep(blockquote p:last-child) {
+  margin-bottom: 0;
+}
+.md-markdown :deep(hr) {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  margin: 0.875rem 0;
+}
+.md-markdown :deep(img) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+}
+.md-markdown :deep(figure) {
+  margin: 0 0 0.75rem;
+}
+.md-markdown :deep(figcaption) {
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+.md-markdown :deep(dl) {
+  margin: 0 0 0.75rem;
+}
+.md-markdown :deep(dt) {
+  margin-top: 0.5rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.md-markdown :deep(dt:first-child) {
+  margin-top: 0;
+}
+.md-markdown :deep(dd) {
+  margin: 0.125rem 0 0 1rem;
+  color: var(--color-muted);
+}
+.md-markdown :deep(strong) {
+  font-weight: 600;
+}
+.md-markdown :deep(em) {
+  font-style: italic;
+}
+.md-markdown :deep(del),
+.md-markdown :deep(s) {
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+.md-markdown :deep(mark) {
+  border-radius: 4px;
+  background: var(--color-mark);
+  padding: 0.1rem 0.25rem;
+  color: var(--color-mark-ink);
+}
 .md-markdown :deep(a) {
+  color: var(--color-pale-blue-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.md-markdown :deep(a:hover) {
   color: var(--color-ink);
 }
 </style>
